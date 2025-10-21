@@ -19,14 +19,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
-    const backgroundImages = [
-        'https://picsum.photos/1920/1080?random=1',
-        'https://picsum.photos/1920/1080?random=2',
-        'https://picsum.photos/1920/1080?random=3',
-        'https://picsum.photos/1920/1080?random=4',
-        'https://picsum.photos/1920/1080?random=5'
-    ];
-    let currentBgIndex = 0;
+// ... other variables ...
+const backgroundImages = [
+    'fall.jpg',
+    'cat.jpg',
+    'beach.jpeg',
+    'houses.jpg',
+    'kusama.jpg',
+    'museum.jpeg',
+    'park.jpg',
+    'sashimi.jpg',
+    'studio.jpg',
+    'trees.jpg',
+    'water.jpg'
+];
+let currentBgIndex = 0;
+// ... rest of the code ...
 
     // --- Dot Management Functions ---
     function createDot() {
