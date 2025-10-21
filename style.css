@@ -1,5 +1,15 @@
 :root {
-    --bg-image: url('https://picsum.photos/1920/1080?random=1'); /* Default placeholder background */
+    --bg-image: url('beach.jpeg');
+    --bg-image: url('cat.JPG');
+    --bg-image: url('fall.JPG');
+    --bg-image: url('houses.jpg');
+    --bg-image: url('kusama.JPG');
+    --bg-image: url('museum.jpeg');
+    --bg-image: url('park.JPG');
+    --bg-image: url('sashimi.JPG');
+    --bg-image: url('studio.JPG');
+    --bg-image: url('trees.JPG');
+    --bg-image: url('water.JPG');
     --dot-color: #ffffff;
     --border-color: #a0a0a0;
     --text-color: #333;
@@ -34,7 +44,7 @@ body, html {
     background-color: var(--sidebar-bg);
     border-right: 2px solid var(--border-color);
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 5px rgba(255, 248, 224, 0.1);
     display: flex;
     flex-direction: column;
     gap: 15px;
