@@ -183,10 +183,10 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
     }
 
-    // Set initial background image
-    rotateBackground(); // <--- Called here first
-    // Rotate every 10 seconds
-    const backgroundInterval = setInterval(rotateBackground, 10000); // 10 seconds
+// Set initial background image
+rotateBackground();
+// Rotate every 20 seconds (20000ms)
+const backgroundInterval = setInterval(rotateBackground, 20000); // Changed to 20000
 
     // --- Initialization ---
     initializeDots(currentNumDots);
