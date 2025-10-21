@@ -74,19 +74,17 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         });
     }
 
-    // --- Animation Loop ---
-// --- Animation Loop ---
+ // --- Animation Loop ---
     function animateDots() {
-        // Only run the following logic if the dots are NOT scattered
+        // If the dots are scattered, skip ALL movement logic
         if (!isScattered) { 
             
             dots.forEach((dot, index) => {
                 let targetX = mouseX;
                 let targetY = mouseY;
-
+                
+                // This logic only runs if isScattered is FALSE
                 if (index > 0) {
-                    // Each dot follows the previous dot, creating the "line" effect
-                    // We must calculate target position relative to the mainContent container
                     targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
                     targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
                 }
@@ -104,7 +102,6 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         
         requestAnimationFrame(animateDots);
     }
-
         dots.forEach((dot, index) => {
             let targetX = mouseX;
             let targetY = mouseY;
@@ -128,12 +125,14 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         requestAnimationFrame(animateDots);
     }
 
-    // --- Event Handlers ---
-    mainContent.addEventListener('mousemove', (e) => {
-        // Calculate mouse position relative to mainContent
-        const rect = mainContent.getBoundingClientRect();
-        mouseX = e.clientX - rect.left - currentDotSize / 2; // Adjust for dot center
-        mouseY = e.clientY - rect.top - currentDotSize / 2; // Adjust for dot center
+  mainContent.addEventListener('mousemove', (e) => {
+        // IMPORTANT: Only update mouse coordinates if the dots are NOT scattered.
+        if (!isScattered) {
+            // Calculate mouse position relative to mainContent
+            const rect = mainContent.getBoundingClientRect();
+            mouseX = e.clientX - rect.left - currentDotSize / 2; // Adjust for dot center
+            mouseY = e.clientY - rect.top - currentDotSize / 2;  // Adjust for dot center
+        }
     });
 
 mainContent.addEventListener('dblclick', () => {
