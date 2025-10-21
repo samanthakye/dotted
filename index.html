@@ -1,0 +1,62 @@
+<body class="bg-gray-900 overflow-hidden font-sans" id="body-main">
+
+    <!-- Background Layer (Cycles Images) -->
+    <div id="background-container"></div>
+
+    <!-- Main Application Content (The Dot Canvas) -->
+    <div id="canvas" class="relative w-full h-screen z-10">
+        <!-- Message Box (Instead of alert()) -->
+        <div id="message-box" class="fixed top-5 left-1/2 transform -translate-x-1/2 p-3 bg-indigo-600 text-white rounded-lg shadow-xl opacity-0 transition-opacity duration-300 z-[500]"></div>
+    </div>
+
+    <!-- Settings Sidebar -->
+    <div id="settings" class="fixed top-0 right-0 h-full w-full sm:w-80 bg-gray-800 bg-opacity-90 backdrop-blur-sm p-6 overflow-y-auto text-white shadow-2xl transition-transform duration-300 transform translate-x-full sm:translate-x-0">
+
+        <h2 class="text-3xl font-extrabold mb-6 text-indigo-400 border-b border-indigo-500 pb-2">Hole Trail Customizer</h2>
+
+        <!-- Dot Size -->
+        <div class="mb-6">
+            <label for="dot-size" class="block text-sm font-medium mb-2">Dot Size: <span id="size-value" class="font-bold">12px</span></label>
+            <input type="range" id="dot-size" min="4" max="30" value="12" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+        </div>
+
+        <!-- Dot Color -->
+        <div class="mb-6">
+            <label for="dot-color" class="block text-sm font-medium mb-2">Dot Color:</label>
+            <div class="flex items-center space-x-3">
+                <input type="color" id="dot-color" value="#FFFFFF" class="w-10 h-10 p-1 border-2 border-gray-600 rounded-full cursor-pointer bg-transparent">
+                <span class="text-xs text-gray-400">Set the color of the dot borders/shadows</span>
+            </div>
+        </div>
+
+        <!-- Following Speed (Interpolation Factor) -->
+        <div class="mb-6">
+            <label for="dot-speed" class="block text-sm font-medium mb-2">Follow Speed: <span id="speed-value" class="font-bold">0.15</span> (Slower to Faster)</label>
+            <input type="range" id="dot-speed" min="5" max="40" value="15" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+        </div>
+
+        <p class="text-indigo-400 text-sm italic mt-8 p-3 bg-gray-700 bg-opacity-50 rounded-lg">
+            <span class="font-bold">Interaction Tip:</span> Double-click anywhere on the screen to scatter the dots. Double-click again to make them follow the mouse.
+        </p>
+
+        <!-- Background Image Uploader -->
+        <div class="mt-8 pt-6 border-t border-gray-700">
+            <h3 class="text-xl font-semibold mb-4 text-indigo-300">Background Setup</h3>
+            <p class="text-sm mb-4 text-gray-300">Use the button below to upload your own local image or URL to override the rotating background.</p>
+
+            <label for="image-upload" class="cursor-pointer inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg">
+                Upload Custom Background
+                <input type="file" id="image-upload" accept="image/*" class="hidden">
+            </label>
+        </div>
+
+        <!-- Instructions for the background rotation -->
+        <div class="mt-8 pt-6 border-t border-gray-700">
+            <h3 class="text-xl font-semibold mb-4 text-indigo-300">Background Rotation</h3>
+            <button id="toggle-rotation" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg">
+                Pause Rotation
+            </button>
+        </div>
+
+    </div>
+</body>
