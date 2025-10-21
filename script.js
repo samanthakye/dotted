@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. Element Selectors ---
     const mainContent = document.getElementById('main-content');
-    const sidebar = document.getElementById('sidebar');
-
     const dotSizeInput = document.getElementById('dotSize');
     const dotSizeValueSpan = document.getElementById('dotSizeValue');
     const dotColorInput = document.getElementById('dotColor');
@@ -10,57 +9,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const numDotsInput = document.getElementById('numDots');
     const numDotsValueSpan = document.getElementById('numDotsValue');
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
-    const bgSelectors = document.querySelectorAll('.bg-selector');
+    const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds'); // For dropdown
 
+    // --- 2. State and Configuration Variables ---
     let dots = [];
     let mouseX = 0;
     let mouseY = 0;
+    
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
-    let currentFollowSpeed = parseFloat(followSpeedInput.value);
-    let currentNumDots = parseInt(numDotsInput.value);
-    let isScattered = false; // Dots start in 'follow' mode
+    let isScattered = false; // Controls scatter/follow mode
+    
+    // Custom Backgrounds Array (Ensure these filenames match your uploaded files exactly!)
+    const backgroundImages = [
+        'fall.jpg',
+        'cat.jpg',
+        'beach.jpeg',
+        'houses.jpg',
+        'kusama.jpg',
+        'museum.jpeg',
+        'park.jpg',
+        'sashimi.jpg',
+        'studio.jpg',
+        'trees.jpg',
+        'water.jpg'
+    ];
+    let currentBgIndex = -1; // Start at -1 so first rotateBackground lands on index 0
+    let backgroundInterval; // Defined here to be accessible throughout
 
-const backgroundImages = [
-    'fall.JPG', // Index 0
-    'cat.JPG',  // Index 1
-    'beach.jpeg', // Index 2
-    'houses.jpg', // Index 3
-    'kusama.JPG', // Index 4
-    'museum.jpeg', // Index 5
-    'park.jpg', // Index 6
-    'sashimi.JPG', // Index 7
-    'studio.JPG', // Index 8
-    'trees.JPG', // Index 9
-    'water.JPG' // Index 10
-];
-
-// CHANGE THIS LINE:
-let currentBgIndex = -1; // <-- Change from 0 to -1
-
-// ... rest of the code ...
-
-    // --- Dot Management Functions ---
+    // --- 3. Dot Management Functions ---
     function createDot() {
         const dot = document.createElement('div');
         dot.classList.add('dot');
         dot.style.width = `${currentDotSize}px`;
         dot.style.height = `${currentDotSize}px`;
         dot.style.backgroundColor = currentDotColor;
-        // Position dots initially off-screen or at a random point
-        dot.style.left = `${Math.random() * mainContent.offsetWidth}px`;
-        dot.style.top = `${Math.random() * mainContent.offsetHeight}px`;
+        // Position dots initially randomly within the main content bounds
+        const rect = mainContent.getBoundingClientRect();
+        dot.style.left = `${Math.random() * rect.width}px`;
+        dot.style.top = `${Math.random() * rect.height}px`;
         mainContent.appendChild(dot);
         return dot;
     }
 
     function initializeDots(count) {
-        // Clear existing dots
         dots.forEach(dot => dot.remove());
         dots = [];
-
         for (let i = 0; i < count; i++) {
             dots.push(createDot());
         }
@@ -74,17 +70,16 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         });
     }
 
- // --- Animation Loop ---
+    // --- 4. Animation Loop ---
     function animateDots() {
-        // If the dots are scattered, skip ALL movement logic
+        // Only run movement logic if the dots are NOT scattered
         if (!isScattered) { 
-            
             dots.forEach((dot, index) => {
                 let targetX = mouseX;
                 let targetY = mouseY;
-                
-                // This logic only runs if isScattered is FALSE
+
                 if (index > 0) {
+                    // Each dot follows the previous dot's center
                     targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
                     targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
                 }
@@ -102,53 +97,50 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         
         requestAnimationFrame(animateDots);
     }
-        dots.forEach((dot, index) => {
-            let targetX = mouseX;
-            let targetY = mouseY;
-
-            if (index > 0) {
-                // Each dot follows the previous dot, creating the "line" effect
-                targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2; // Center of previous dot
-                targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
-            }
-
-            const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-            const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-            const dx = targetX - currentX;
-            const dy = targetY - currentY;
-
-            dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-            dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+    
+    // --- 5. Background Image Functions ---
+    function preloadImages(imageArray) {
+        imageArray.forEach((url) => {
+            new Image().src = url; // Starts downloading the image
         });
-
-        requestAnimationFrame(animateDots);
     }
 
-  mainContent.addEventListener('mousemove', (e) => {
-        // IMPORTANT: Only update mouse coordinates if the dots are NOT scattered.
-        if (!isScattered) {
-            // Calculate mouse position relative to mainContent
-            const rect = mainContent.getBoundingClientRect();
-            mouseX = e.clientX - rect.left - currentDotSize / 2; // Adjust for dot center
-            mouseY = e.clientY - rect.top - currentDotSize / 2;  // Adjust for dot center
-        }
-    });
+    function rotateBackground() {
+        currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
+        const imageUrl = backgroundImages[currentBgIndex];
+        
+        const container = document.getElementById('container');
+        container.style.backgroundImage = `url('${imageUrl}')`;
+        document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
+    }
 
-mainContent.addEventListener('dblclick', () => {
+    // --- 6. Event Handlers ---
+    
+    // Mouse Move (Only updates target coordinates if not scattered)
+    mainContent.addEventListener('mousemove', (e) => {
+        if (!isScattered) {
+            const rect = mainContent.getBoundingClientRect();
+            // Calculate mouse position relative to mainContent and center the dot
+            mouseX = e.clientX - rect.left - currentDotSize / 2; 
+            mouseY = e.clientY - rect.top - currentDotSize / 2;  
+        }
+    }); 
+
+    // Double Click (Toggle Scatter/Follow State)
+    mainContent.addEventListener('dblclick', () => {
         
         if (!isScattered) {
-            // --- SCATTER LOGIC: Scatter the dots and set state to scattered ---
-            
+            // SCATTER LOGIC
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
-            const sidebarWidth = 280;
+            const sidebarWidth = 280; 
 
             dots.forEach(dot => {
                 const minX = sidebarWidth;
                 const maxX = fullWidth; 
                 
-                const randomX = Math.random() * (maxX - minX) + minX;
+                // Random position across the entire window area (excluding sidebar)
+                const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
                 dot.style.transition = 'left 0.5s ease-out, top 0.5s ease-out';
@@ -156,30 +148,22 @@ mainContent.addEventListener('dblclick', () => {
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
             });
             
-            // Set the state to scattered
             isScattered = true;
 
         } else {
-            // --- FOLLOW LOGIC: Clear transitions and set state back to follow ---
+            // FOLLOW LOGIC
             
             dots.forEach(dot => {
-                // Remove the transition immediately for smooth return to follow mode
+                // Remove transition immediately so they snap back to following
                 dot.style.transition = 'none';
-                
-                // Optional: You could instantly snap the first dot to the mouse
-                // dot.style.left = `${mouseX}px`;
-                // dot.style.top = `${mouseY}px`;
             });
             
-            // Set the state back to follow mode
             isScattered = false;
         }
-
-        // The timeout is no longer needed after the scatter, 
-        // but we'll keep the small cleanup for safety if you re-introduce transitions later.
-        // It's more critical to ensure the 'transition: none' is hit when entering follow mode.
     });
-    // --- Sidebar Control Listeners ---
+
+    // --- 7. Sidebar Control Listeners ---
+    
     dotSizeInput.addEventListener('input', (e) => {
         currentDotSize = parseInt(e.target.value);
         dotSizeValueSpan.textContent = `${currentDotSize}px`;
@@ -209,38 +193,40 @@ mainContent.addEventListener('dblclick', () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                document.getElementById('container').style.backgroundImage = `url('${event.target.result}')`;
+                // Stop rotation when custom file is uploaded
+                clearInterval(backgroundInterval); 
+                
+                const container = document.getElementById('container');
+                container.style.backgroundImage = `url('${event.target.result}')`;
                 document.documentElement.style.setProperty('--bg-image', `url('${event.target.result}')`);
             };
             reader.readAsDataURL(file);
         }
     });
 
-    bgSelectors.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const bgFileName = e.target.dataset.bg;
-            // Assuming these images are in the same directory or accessible paths
-            document.getElementById('container').style.backgroundImage = `url('${bgFileName}')`;
-            document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
-            // Stop automatic rotation if a specific background is chosen
+    defaultBackgroundsSelect.addEventListener('change', (e) => {
+        const bgFileName = e.target.value; 
+
+        if (bgFileName) {
+            // Stop rotation when a specific background is chosen
             clearInterval(backgroundInterval);
-        });
+            
+            const container = document.getElementById('container');
+            container.style.backgroundImage = `url('${bgFileName}')`;
+            document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
+        }
     });
 
-// --- Background Image Rotation ---
-    function rotateBackground() {
-        currentBgIndex = (currentBgIndex + 1) % backgroundImages.length; // <--- The index is incremented here!
-        const imageUrl = backgroundImages[currentBgIndex];
-        document.getElementById('container').style.backgroundImage = `url('${imageUrl}')`;
-        document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
-    }
 
-// Set initial background image
-rotateBackground();
-// Rotate every 20 seconds (20000ms)
-const backgroundInterval = setInterval(rotateBackground, 20000); // Changed to 20000
-
-    // --- Initialization ---
+    // --- 8. Initialization (Runs Once) ---
+    
+    preloadImages(backgroundImages);
     initializeDots(currentNumDots);
     animateDots();
-});
+
+    // Set initial background image and start rotation
+    rotateBackground();
+    // Rotate every 20 seconds (20000ms)
+    backgroundInterval = setInterval(rotateBackground, 20000); 
+
+}); // <-- CLOSES the DOMContentLoaded listener
