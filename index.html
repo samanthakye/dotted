@@ -3,9 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Animated Trail & Customizer</title>
-    
-    <!-- DM Sans Font Import -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    
-…
+    <title>dotted.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <aside id="sidebar">
+            <h2>dotted. settings</h2>
+            <div class="setting-group">
+                <label for="dotSize">Dot Size:</label>
+                <input type="range" id="dotSize" min="5" max="50" value="25">
+                <span id="dotSizeValue">25px</span>
+            </div>
+            <div class="setting-group">
+                <label for="dotColor">Dot Color:</label>
+                <input type="color" id="dotColor" value="#ffffff">
+            </div>
+            <div class="setting-group">
+                <label for="followSpeed">Follow Speed:</label>
+                <input type="range" id="followSpeed" min="0.05" max="0.5" step="0.01" value="0.1">
+                <span id="followSpeedValue">0.1</span>
+            </div>
+            <div class="setting-group">
+                <label for="numDots">Number of Dots:</label>
+                <input type="range" id="numDots" min="1" max="100" value="25">
+                <span id="numDotsValue">25</span>
+            </div>
+            <div class="setting-group">
+                <label for="backgroundImageUpload">Upload Background:</label>
+                <input type="file" id="backgroundImageUpload" accept="image/*">
+            </div>
+            <div class="setting-group">
+                <h3>Default Backgrounds:</h3>
+                <button class="bg-selector" data-bg="bg1.jpg">BG 1</button>
+                <button class="bg-selector" data-bg="bg2.jpg">BG 2</button>
+                <button class="bg-selector" data-bg="bg3.jpg">BG 3</button>
+                <!-- Add more buttons for default backgrounds as needed --></div>
+        </aside>
+
+        <main id="main-content">
+            <!-- Dots will be appended here by JavaScript --></main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
