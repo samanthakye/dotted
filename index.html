@@ -31,11 +31,14 @@
             </div>
             <div class="setting-group">
                 <label for="backgroundImageUpload">Upload Background:</label>
-                <input type="file" id="backgroundImageUpload" accept="image/*">
+                <label for="backgroundImageUpload" class="upload-button-style">
+                Choose File...
+                </label>
+                <input type="file" id="backgroundImageUpload" accept="image/*" style="display: none;">
             </div>
             <div class="setting-group">
                 <label for="defaultBackgrounds">Default Backgrounds:</label>
-                <select id="defaultBackgrounds">
+                <select id="defaultBackgrounds" class="rounded-button-style>
                     <option value="" disabled selected>Select a Background...</option>
                     <option value="fall.JPG">BG 1 - Fall</option>
                     <option value="cat.JPG">BG 2 - Cat</option>
