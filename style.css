@@ -71,7 +71,6 @@ body, html {
 
 .setting-group input[type="range"] {
     width: 100%;
-    -webkit-appearance: none;
     height: 4px;
     background: var(--border-color);
     outline: none;
@@ -95,7 +94,6 @@ body, html {
 }
 
 .setting-group input[type="color"] {
-    -webkit-appearance: none;
     border: none;
     width: 40px;
     height: 25px;
