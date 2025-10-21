@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
-// ... other variables ...
+    let currentFollowSpeed = parseFloat(followSpeedInput.value);
+    let currentNumDots = parseInt(numDotsInput.value);
+    let isScattered = false; // Dots start in 'follow' mode
 
 const backgroundImages = [
     'fall.JPG', // Index 0
@@ -73,12 +75,35 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
     }
 
     // --- Animation Loop ---
+// --- Animation Loop ---
     function animateDots() {
-        if (!mainContent.contains(sidebar)) { // Ensure sidebar is visible for calculations
-            // Adjust mouseX/mouseY for sidebar offset if sidebar is always fixed
-            // For now, assume mouseX/mouseY are relative to the entire document.
-            // Dots are positioned relative to mainContent.
+        // Only run the following logic if the dots are NOT scattered
+        if (!isScattered) { 
+            
+            dots.forEach((dot, index) => {
+                let targetX = mouseX;
+                let targetY = mouseY;
+
+                if (index > 0) {
+                    // Each dot follows the previous dot, creating the "line" effect
+                    // We must calculate target position relative to the mainContent container
+                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
+                }
+
+                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                const dx = targetX - currentX;
+                const dy = targetY - currentY;
+
+                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+            });
         }
+        
+        requestAnimationFrame(animateDots);
+    }
 
         dots.forEach((dot, index) => {
             let targetX = mouseX;
@@ -111,39 +136,50 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         mouseY = e.clientY - rect.top - currentDotSize / 2; // Adjust for dot center
     });
 
-// --- Event Handlers ---
-    // ... (keep the mousemove handler above this) ...
-
-    mainContent.addEventListener('dblclick', () => {
-        // Get the full dimensions of the main container/window
-        const fullWidth = window.innerWidth;
-        const fullHeight = window.innerHeight;
+mainContent.addEventListener('dblclick', () => {
         
-        // The sidebar width is fixed at 280px (from style.css)
-        const sidebarWidth = 280;
-
-        dots.forEach(dot => {
-            // Calculate random X position: start at the right edge of the sidebar (280px)
-            // and end at the full window width.
-            const minX = sidebarWidth;
-            const maxX = fullWidth; 
+        if (!isScattered) {
+            // --- SCATTER LOGIC: Scatter the dots and set state to scattered ---
             
-            const randomX = Math.random() * (maxX - minX) + minX;
-            const randomY = Math.random() * fullHeight;
+            const fullWidth = window.innerWidth;
+            const fullHeight = window.innerHeight;
+            const sidebarWidth = 280;
 
-            dot.style.transition = 'left 0.5s ease-out, top 0.5s ease-out'; // Smooth scatter
-            dot.style.left = `${randomX - currentDotSize / 2}px`; // Adjust for dot center
-            dot.style.top = `${randomY - currentDotSize / 2}px`;  // Adjust for dot center
-        });
-        
-        // Remove transition after scatter to allow immediate following
-        setTimeout(() => {
             dots.forEach(dot => {
-                dot.style.transition = 'none';
-            });
-        }, 500);
-    });
+                const minX = sidebarWidth;
+                const maxX = fullWidth; 
+                
+                const randomX = Math.random() * (maxX - minX) + minX;
+                const randomY = Math.random() * fullHeight;
 
+                dot.style.transition = 'left 0.5s ease-out, top 0.5s ease-out';
+                dot.style.left = `${randomX - currentDotSize / 2}px`;
+                dot.style.top = `${randomY - currentDotSize / 2}px`;
+            });
+            
+            // Set the state to scattered
+            isScattered = true;
+
+        } else {
+            // --- FOLLOW LOGIC: Clear transitions and set state back to follow ---
+            
+            dots.forEach(dot => {
+                // Remove the transition immediately for smooth return to follow mode
+                dot.style.transition = 'none';
+                
+                // Optional: You could instantly snap the first dot to the mouse
+                // dot.style.left = `${mouseX}px`;
+                // dot.style.top = `${mouseY}px`;
+            });
+            
+            // Set the state back to follow mode
+            isScattered = false;
+        }
+
+        // The timeout is no longer needed after the scatter, 
+        // but we'll keep the small cleanup for safety if you re-introduce transitions later.
+        // It's more critical to ensure the 'transition: none' is hit when entering follow mode.
+    });
     // --- Sidebar Control Listeners ---
     dotSizeInput.addEventListener('input', (e) => {
         currentDotSize = parseInt(e.target.value);
