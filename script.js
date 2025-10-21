@@ -20,20 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
 // ... other variables ...
+
 const backgroundImages = [
-    'fall.jpg',
-    'cat.jpg',
-    'beach.jpeg',
-    'houses.jpg',
-    'kusama.jpg',
-    'museum.jpeg',
-    'park.jpg',
-    'sashimi.jpg',
-    'studio.jpg',
-    'trees.jpg',
-    'water.jpg'
+    'fall.jpg', // Index 0
+    'cat.jpg',  // Index 1
+    'beach.jpeg', // Index 2
+    'houses.jpg', // Index 3
+    'kusama.jpg', // Index 4
+    'museum.jpeg', // Index 5
+    'park.jpg', // Index 6
+    'sashimi.jpg', // Index 7
+    'studio.jpg', // Index 8
+    'trees.jpg', // Index 9
+    'water.jpg' // Index 10
 ];
-let currentBgIndex = 0;
+
+// CHANGE THIS LINE:
+let currentBgIndex = -1; // <-- Change from 0 to -1
+
 // ... rest of the code ...
 
     // --- Dot Management Functions ---
@@ -171,16 +175,16 @@ let currentBgIndex = 0;
         });
     });
 
-    // --- Background Image Rotation ---
+// --- Background Image Rotation ---
     function rotateBackground() {
-        currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
+        currentBgIndex = (currentBgIndex + 1) % backgroundImages.length; // <--- The index is incremented here!
         const imageUrl = backgroundImages[currentBgIndex];
         document.getElementById('container').style.backgroundImage = `url('${imageUrl}')`;
         document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
     }
 
     // Set initial background image
-    rotateBackground();
+    rotateBackground(); // <--- Called here first
     // Rotate every 10 seconds
     const backgroundInterval = setInterval(rotateBackground, 10000); // 10 seconds
 
