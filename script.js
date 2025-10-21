@@ -22,17 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // ... other variables ...
 
 const backgroundImages = [
-    'fall.jpg', // Index 0
-    'cat.jpg',  // Index 1
+    'fall.JPG', // Index 0
+    'cat.JPG',  // Index 1
     'beach.jpeg', // Index 2
     'houses.jpg', // Index 3
-    'kusama.jpg', // Index 4
+    'kusama.JPG', // Index 4
     'museum.jpeg', // Index 5
     'park.jpg', // Index 6
-    'sashimi.jpg', // Index 7
-    'studio.jpg', // Index 8
-    'trees.jpg', // Index 9
-    'water.jpg' // Index 10
+    'sashimi.JPG', // Index 7
+    'studio.JPG', // Index 8
+    'trees.JPG', // Index 9
+    'water.JPG' // Index 10
 ];
 
 // CHANGE THIS LINE:
