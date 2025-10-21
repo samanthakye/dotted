@@ -25,7 +25,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for the dots (no more hole-punch) */
+        /* Custom styles for the dots (Solid dots, no more hole-punch) */
         .dot {
             position: absolute;
             width: var(--size);
@@ -36,7 +36,7 @@
             pointer-events: none; 
             transition: opacity 0.3s ease;
             z-index: 100;
-            /* Using a light, subtle shadow to give them depth */
+            /* Using a light, subtle shadow to give them the floating card depth */
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
@@ -64,7 +64,7 @@
             border-radius: 10px;
         }
 
-        /* Styling for the range input accent color */
+        /* Styling for the range input accent color using the custom neon color */
         input[type="range"]::-webkit-slider-thumb {
             background-color: #DFFF00; /* Neon color */
         }
@@ -159,6 +159,7 @@
         let isScattered = false;
         let isRotationPaused = false;
         let rotationInterval;
+        let isMouseOverSidebar = false; // NEW: Flag to pause dot tracking
 
         // Placeholder image URLs (using light/minimalist images now)
         const backgroundImages = [
@@ -191,8 +192,6 @@
             dot.style.setProperty('--size', `${dotConfig.size * scaleFactor}px`);
             dot.style.setProperty('--color', dotConfig.color);
             dot.style.setProperty('z-index', 100 - index);
-
-            // NOTE: Removed dot.classList.add('dot-shadow');
 
             canvas.appendChild(dot);
             dotElements.push(dot);
@@ -234,7 +233,11 @@
 
                 } else {
                     // FOLLOW MODE: Calculate target position
-                    targetPos = i === 0 ? mousePos : dotPositions[i - 1];
+                    
+                    // If the mouse is over the sidebar, the target remains the last known position.
+                    // This creates the "freeze at the edge" effect.
+                    targetPos = isMouseOverSidebar ? pos : (i === 0 ? mousePos : dotPositions[i - 1]);
+
 
                     // Linear Interpolation (Lerp) for smooth following/speed control
                     pos.x += (targetPos.x - pos.x) * dotConfig.speedFactor;
@@ -280,17 +283,29 @@
 
         // 1. Mouse Movement
         window.addEventListener('mousemove', (e) => {
+            // ONLY update mousePos if the cursor is NOT over the sidebar
+            if (isMouseOverSidebar) return; 
             mousePos = { x: e.clientX, y: e.clientY };
         });
 
-        // 2. Double Click (Scatter/Gather)
+        // 2. Sidebar interaction listeners (NEW)
+        settingsSidebar.addEventListener('mouseenter', () => {
+            isMouseOverSidebar = true;
+        });
+
+        settingsSidebar.addEventListener('mouseleave', () => {
+            isMouseOverSidebar = false;
+        });
+
+
+        // 3. Double Click (Scatter/Gather)
         canvas.addEventListener('dblclick', () => {
             isScattered = !isScattered;
             const message = isScattered ? 'Scatter Mode Activated!' : 'Follow Mode Activated!';
             showMessage(message);
         });
 
-        // 3. Settings Control Handlers
+        // 4. Settings Control Handlers
         document.getElementById('dot-size').addEventListener('input', (e) => {
             dotConfig.size = parseInt(e.target.value);
             document.getElementById('size-value').textContent = `${dotConfig.size}px`;
@@ -299,7 +314,6 @@
 
         document.getElementById('dot-color').addEventListener('input', (e) => {
             dotConfig.color = e.target.value;
-            // NOTE: Removed logic for setting --bg-color as hole-punch effect is gone
             updateDotStyles();
         });
 
@@ -309,7 +323,7 @@
             document.getElementById('speed-value').textContent = dotConfig.speedFactor.toFixed(2);
         });
 
-        // 4. Background Rotation Toggle
+        // 5. Background Rotation Toggle
         document.getElementById('toggle-rotation').addEventListener('click', () => {
             isRotationPaused = !isRotationPaused;
             const button = document.getElementById('toggle-rotation');
@@ -329,7 +343,7 @@
         });
 
 
-        // 5. Image Upload Handler
+        // 6. Image Upload Handler
         document.getElementById('image-upload').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -353,13 +367,12 @@
             }
         });
 
-        // 6. Initial Setup and Start
+        // 7. Initial Setup and Start
         window.onload = function() {
             // Initialize dots
             for (let i = 0; i < DOT_COUNT; i++) {
                 createDot(i);
             }
-            // NOTE: Removed setProperty('--bg-color') line
 
             // Start animation and background rotation
             animate();
