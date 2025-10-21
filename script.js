@@ -111,14 +111,31 @@ let currentBgIndex = -1; // <-- Change from 0 to -1
         mouseY = e.clientY - rect.top - currentDotSize / 2; // Adjust for dot center
     });
 
+// --- Event Handlers ---
+    // ... (keep the mousemove handler above this) ...
+
     mainContent.addEventListener('dblclick', () => {
+        // Get the full dimensions of the main container/window
+        const fullWidth = window.innerWidth;
+        const fullHeight = window.innerHeight;
+        
+        // The sidebar width is fixed at 280px (from style.css)
+        const sidebarWidth = 280;
+
         dots.forEach(dot => {
-            const randomX = Math.random() * mainContent.offsetWidth;
-            const randomY = Math.random() * mainContent.offsetHeight;
+            // Calculate random X position: start at the right edge of the sidebar (280px)
+            // and end at the full window width.
+            const minX = sidebarWidth;
+            const maxX = fullWidth; 
+            
+            const randomX = Math.random() * (maxX - minX) + minX;
+            const randomY = Math.random() * fullHeight;
+
             dot.style.transition = 'left 0.5s ease-out, top 0.5s ease-out'; // Smooth scatter
-            dot.style.left = `${randomX}px`;
-            dot.style.top = `${randomY}px`;
+            dot.style.left = `${randomX - currentDotSize / 2}px`; // Adjust for dot center
+            dot.style.top = `${randomY - currentDotSize / 2}px`;  // Adjust for dot center
         });
+        
         // Remove transition after scatter to allow immediate following
         setTimeout(() => {
             dots.forEach(dot => {
