@@ -147,7 +147,7 @@ body, html {
 #main-content {
     flex-grow: 1;
     position: relative;
-    overflow: hidden; /* Crucial for dot containment */
+    overflow: hidden; 
     transform: translateZ(0); 
 }
 

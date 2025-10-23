@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
-    let currentNumDots = parseInt(numDotsInput.value);
+    let currentNumDots = parseInt(numDotsInput.value) || 25;
     
     let isScattered = false;      
     let isConnectMode = false;    
