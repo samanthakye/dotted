@@ -27,9 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isConnectMode = false;    
     let connectedDots = [];       
     
-    // Floating Dot Variables
+    // Animation/Transition Variables
     const floatIntensity = 0.005; 
     const maxFloatDistance = 5;   
+    const scatterTransition = 'all 0.5s ease-out'; // ADDED: Smooth transition style
     
     // Background Variables
     const backgroundImages = [
@@ -145,23 +146,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. Connect-The-Dots Logic ---
     
     function drawConnectionLines() {
-        // 1. Clear any existing lines
         dotConnectionsSVG.innerHTML = ''; 
 
         if (connectedDots.length < 2) return;
 
-        // 2. Iterate through connected dots and draw lines between pairs
         for (let i = 0; i < connectedDots.length - 1; i++) {
             const startDot = connectedDots[i];
             const endDot = connectedDots[i + 1];
 
-            // Get center coordinates relative to the SVG container
             const x1 = parseFloat(startDot.style.left) + currentDotSize / 2;
             const y1 = parseFloat(startDot.style.top) + currentDotSize / 2;
             const x2 = parseFloat(endDot.style.left) + currentDotSize / 2;
             const y2 = parseFloat(endDot.style.top) + currentDotSize / 2;
 
-            // Create an SVG <line> element
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', x1);
             line.setAttribute('y1', y1);
@@ -195,13 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             connectedDots.push(clickedDot);
             
-            // Visual Feedback
             clickedDot.style.opacity = 0.5; 
             clickedDot.style.backgroundColor = '#FF6347'; 
             
-            drawConnectionLines(); // DRAW THE LINE HERE
+            drawConnectionLines(); 
 
-            // Check for Completion
             if (connectedDots.length === dots.length) {
                 resetConnectMode(true);
             }
@@ -210,15 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetConnectMode(success = false) {
         dots.forEach(dot => {
-            // Reset transforms and visuals
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
             dot.style.opacity = 1;       
             dot.style.backgroundColor = currentDotColor; 
             dot.removeEventListener('click', handleDotClick); 
             
-            // REMOVE GPU acceleration property
-            dot.style.transform = 'none'; 
+            dot.style.transform = 'none'; // Remove GPU acceleration
         });
         
         isScattered = false;
@@ -234,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. Event Handlers ---
     
-    // Mouse Move (Only updates target coordinates if not scattered)
     mainContent.addEventListener('mousemove', (e) => {
         if (!isScattered) {
             const rect = mainContent.getBoundingClientRect();
@@ -245,30 +237,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Double Click (Toggle Scatter/Connect State)
     mainContent.addEventListener('dblclick', (e) => {
-        // Prevent double-click reset if user is clicking a dot
         if (e.target.classList.contains('dot')) {
             return; 
         }
         
         if (!isScattered && !isConnectMode) {
-            // State 1: FOLLOW -> SCATTER/CONNECT
+            // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
-            // SCATTER LOGIC
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
             const sidebarWidth = 280; 
 
             dots.forEach(dot => {
+                // ADDED: Enable transition for scatter
+                dot.style.transition = scatterTransition; 
+
                 const minX = sidebarWidth;
                 const maxX = fullWidth; 
                 const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
-                dot.style.transition = 'none';
                 dot.style.left = `${randomX - currentDotSize / 2}px`;
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
 
-                // FIX: Force GPU acceleration for sharp floating dots
+                // FIX: Force GPU acceleration
                 dot.style.transform = 'translateZ(0)';
             });
             
@@ -277,16 +269,36 @@ document.addEventListener('DOMContentLoaded', () => {
             isConnectMode = true; 
             connectedDots = []; 
             
-            // Add visual indication for Connect Mode 
             dots.forEach(dot => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
                 dot.addEventListener('click', handleDotClick); 
             });
 
+            // REMOVE transition after it completes (0.5s) to enable smooth floating
+            setTimeout(() => {
+                dots.forEach(dot => {
+                    dot.style.transition = 'none';
+                });
+            }, 500);
+
         } else if (isConnectMode) {
-            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Double-Click Reset)
+            // State 2: SCATTER/CONNECT -> FOLLOW (Smooth Gather In)
+
+            dots.forEach(dot => {
+                // Enable transition for smooth gather-in effect
+                dot.style.transition = scatterTransition;
+            });
+            
+            // Set state back to follow mode (dots start following target coordinates)
             resetConnectMode(false); 
+
+            // REMOVE transition after it completes (0.5s) to enable smooth frame-by-frame following
+            setTimeout(() => {
+                dots.forEach(dot => {
+                    dot.style.transition = 'none';
+                });
+            }, 500);
         }
     });
 
