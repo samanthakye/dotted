@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isConnectMode = false;    
     let connectedDots = [];       
     
+    // NEW: Graph connection state variables
+    let activeConnection = null;  // Stores the first dot clicked in a pair: { dot: element, index: number }
+    let dotConnections = {};      // Stores the connections: { dotIndex: [connectedDot1Index, ...] }
+    
     // Animation/Transition Variables
     const floatIntensity = 0.005; 
     const maxFloatDistance = 5;   
@@ -148,69 +152,116 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawConnectionLines() {
         dotConnectionsSVG.innerHTML = ''; 
 
-        if (connectedDots.length < 2) return;
+        const linesDrawn = new Set(); 
 
-        for (let i = 0; i < connectedDots.length - 1; i++) {
-            const startDot = connectedDots[i];
-            const endDot = connectedDots[i + 1];
+        dots.forEach((dot, index) => {
+            const connectedArray = dotConnections[index] || [];
+            
+            connectedArray.forEach(connectedIndex => {
+                const partnerDot = dots[connectedIndex];
+                
+                // Create a unique key (e.g., "1-5") to prevent drawing the line twice
+                const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
 
-            const x1 = parseFloat(startDot.style.left) + currentDotSize / 2;
-            const y1 = parseFloat(startDot.style.top) + currentDotSize / 2;
-            const x2 = parseFloat(endDot.style.left) + currentDotSize / 2;
-            const y2 = parseFloat(endDot.style.top) + currentDotSize / 2;
+                if (!linesDrawn.has(key)) {
+                    
+                    const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
+                    const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
+                    const x2 = parseFloat(partnerDot.style.left) + currentDotSize / 2;
+                    const y2 = parseFloat(partnerDot.style.top) + currentDotSize / 2;
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('stroke', currentDotColor); 
-            line.setAttribute('stroke-width', 2);
-            line.setAttribute('stroke-linecap', 'round');
-            line.setAttribute('stroke-dasharray', '5, 5'); 
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', currentDotColor); 
+                    line.setAttribute('stroke-width', 2);
+                    line.setAttribute('stroke-linecap', 'round');
+                    line.setAttribute('stroke-dasharray', '5, 5'); 
 
-            dotConnectionsSVG.appendChild(line);
+                    dotConnectionsSVG.appendChild(line);
+                    linesDrawn.add(key);
+                }
+            });
+        });
+    }
+
+    function checkConnectionCompletion() {
+        let allConnected = true;
+        // Check if every dot has at least one entry in the connections map
+        for (let i = 0; i < dots.length; i++) {
+            if (!dotConnections[i] || dotConnections[i].length === 0) {
+                allConnected = false;
+                break;
+            }
+        }
+
+        if (allConnected) {
+            resetConnectMode(true);
         }
     }
 
     function isDotEligible(dot) {
-        return !connectedDots.includes(dot); 
+        // In the free-form graph mode, any unconnected dot can be the second click
+        return true; 
     }
 
     function handleDotClick(e) {
         e.stopPropagation(); 
-
         if (!isConnectMode) return;
 
         const clickedDot = e.currentTarget; 
-        
-        if (connectedDots.includes(clickedDot)) {
-            return; 
-        }
+        const clickedIndex = dots.indexOf(clickedDot);
 
-        if (connectedDots.length === 0 || isDotEligible(clickedDot)) {
+        // --- State 1: No active connection (First click in a pair) ---
+        if (activeConnection === null) {
             
-            connectedDots.push(clickedDot);
+            activeConnection = { dot: clickedDot, index: clickedIndex };
+            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700'; // Highlight first dot as GOLD
             
-            clickedDot.style.opacity = 0.5; 
-            clickedDot.style.backgroundColor = '#FF6347'; 
-            
-            drawConnectionLines(); 
+        } 
+        // --- State 2: Active connection (Second click in a pair) ---
+        else {
+            const firstDot = activeConnection.dot;
+            const firstIndex = activeConnection.index;
 
-            if (connectedDots.length === dots.length) {
-                resetConnectMode(true);
+            // 1. Cannot connect a dot to itself
+            if (clickedDot === firstDot) {
+                firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                activeConnection = null;
+                return;
             }
+
+            // 2. Add connection to the structure
+            dotConnections[firstIndex] = dotConnections[firstIndex] || [];
+            dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
+
+            // Add connection (if it doesn't exist)
+            if (!dotConnections[firstIndex].includes(clickedIndex)) {
+                dotConnections[firstIndex].push(clickedIndex);
+                dotConnections[clickedIndex].push(firstIndex);
+            }
+            
+            // 3. Update visuals and state
+            drawConnectionLines();
+            
+            firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Reset first dot color
+            activeConnection = null; // Clear active connection
+
+            // 4. Check for Completion
+            checkConnectionCompletion();
         }
     }
 
     function resetConnectMode(success = false) {
         dots.forEach(dot => {
+            // Reset transforms and visuals
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
             dot.style.opacity = 1;       
             dot.style.backgroundColor = currentDotColor; 
             
-            // USE removeEventListener to reliably remove the click handler
             dot.removeEventListener('click', handleDotClick); 
             
             dot.style.transform = 'none'; // Remove GPU acceleration
@@ -218,7 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         isScattered = false;
         isConnectMode = false;
-        connectedDots = [];
+        
+        // NEW: Reset connection specific variables
+        activeConnection = null; 
+        dotConnections = {};
         
         dotConnectionsSVG.innerHTML = ''; // CLEAR THE SVG LINES
 
@@ -267,12 +321,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set new state
             isScattered = true;
             isConnectMode = true; 
-            connectedDots = []; 
+            
+            // Clear any lingering connection state
+            activeConnection = null;
+            dotConnections = {}; 
             
             dots.forEach(dot => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
-                // CRUCIAL FIX: Use addEventListener for reliable click handling
                 dot.addEventListener('click', handleDotClick); 
             });
 
@@ -284,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
 
         } else if (isConnectMode) {
-            // State 2: SCATTER/CONNECT -> FOLLOW (Smooth Gather In)
+            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Double-Click Reset)
 
             dots.forEach(dot => {
                 dot.style.transition = scatterTransition;
@@ -292,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             resetConnectMode(false); 
 
-            // REMOVE transition after it completes (0.5s) to enable smooth frame-by-frame following
+            // REMOVE transition after it completes (0.5s)
             setTimeout(() => {
                 dots.forEach(dot => {
                     dot.style.transition = 'none';
