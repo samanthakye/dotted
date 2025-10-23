@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
-    const dotConnectionsSVG = document.getElementById('dot-connections-svg');
-    const captureButton = document.getElementById('captureButton'); // ADD THIS
+    // FIX: Removed the failing const dotConnectionsSVG = document.getElementById('dot-connections-svg'); 
+    // The selector is now inside the drawing functions where it's needed.
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -26,9 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let isScattered = false;      
     let isConnectMode = false;    
-    let connectedDots = [];       
     
-    let activeConnection = null;  // Stores the first dot clicked in a pair: { dot: element, index: number }
+    let activeConnection = null;  // Stores the first dot clicked in a pair
     let dotConnections = {};      // Stores the connections: { dotIndex: [connectedDot1Index, ...] }
     
     // Animation/Transition Variables
@@ -179,8 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     line.setAttribute('x2', x2);
                     line.setAttribute('y2', y2);
                     
-                    // Use a contrasting color for visibility
-                    line.setAttribute('stroke', '#ffffffff'); 
+                    // Contrast color for visibility
+                    line.setAttribute('stroke', '#FFFFFF'); 
                     
                     line.setAttribute('stroke-width', 3);
                     line.setAttribute('stroke-linecap', 'round');
@@ -195,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkConnectionCompletion() {
         let allConnected = true;
-        // Check if every dot has at least one entry in the connections map
         for (let i = 0; i < dots.length; i++) {
             if (!dotConnections[i] || dotConnections[i].length === 0) {
                 allConnected = false;
@@ -219,42 +217,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const clickedDot = e.currentTarget; 
         const clickedIndex = dots.indexOf(clickedDot);
 
-        // --- State 1: No active connection (First click in a pair) ---
         if (activeConnection === null) {
             
             activeConnection = { dot: clickedDot, index: clickedIndex };
-            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700'; // Highlight first dot as GOLD
+            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700';
             
-        } 
-        // --- State 2: Active connection (Second click in a pair) ---
-        else {
+        } else {
             const firstDot = activeConnection.dot;
             const firstIndex = activeConnection.index;
 
-            // 1. Cannot connect a dot to itself
             if (clickedDot === firstDot) {
                 firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 activeConnection = null;
                 return;
             }
 
-            // 2. Add connection to the structure
             dotConnections[firstIndex] = dotConnections[firstIndex] || [];
             dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
 
-            // Add connection (if it doesn't exist)
             if (!dotConnections[firstIndex].includes(clickedIndex)) {
                 dotConnections[firstIndex].push(clickedIndex);
                 dotConnections[clickedIndex].push(firstIndex);
             }
             
-            // 3. Update visuals and state
             drawConnectionLines();
             
-            firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Reset first dot color
-            activeConnection = null; // Clear active connection
+            firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; 
+            activeConnection = null; 
 
-            // 4. Check for Completion
             checkConnectionCompletion();
         }
     }
