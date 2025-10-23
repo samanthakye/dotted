@@ -11,8 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
-    // NOTE: dotConnectionsSVG is intentionally fetched inside drawing functions for reliability.
-    
+    // Renamed selector:
+    const snapshotButton = document.getElementById('snapshot-btn'); 
+
     // --- 2. State and Configuration Variables ---
     let dots = [];
     let mouseX = 0;
@@ -21,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
-    
-    // FIX: Ensure dots load even if input value is initially empty/zero.
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
     
     let isScattered = false;      
@@ -31,12 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeConnection = null;  
     let dotConnections = {};      
     
-    // Animation/Transition Variables
     const floatIntensity = 0.005; 
     const maxFloatDistance = 5;   
     const scatterTransition = 'all 0.5s ease-out';
     
-    // Background Variables
     const backgroundImages = [
         'fall.jpg', 'cat.jpg', 'beach.jpeg', 'houses.jpg', 
         'kusama.jpg', 'museum.jpeg', 'park.jpg', 'sashimi.jpg', 
@@ -79,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function animateDots() {
         
         if (!isScattered) { 
-            // FOLLOW MODE LOGIC 
             dots.forEach((dot, index) => {
                 let targetX = mouseX;
                 let targetY = mouseY;
@@ -100,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
         } else {
-            // SCATTER/FLOAT MODE LOGIC 
             const time = Date.now() * floatIntensity;
 
             dots.forEach((dot, index) => {
@@ -150,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. Connect-The-Dots Logic ---
     
     function drawConnectionLines() {
-        // FIX: Get the element inside the function for reliability
         const svgElement = document.getElementById('dot-connections-svg');
         if (!svgElement) return;
 

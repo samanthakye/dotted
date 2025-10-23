@@ -174,19 +174,19 @@ body, html {
     z-index: 999; /* Ensure lines are behind the dots */
 }
 
-/* Style for the Capture Button */
-.circular-button {
+/* Style for the Capture Button (Renamed to .snapshot-button) */
+.snapshot-button {
     /* Dimensions and Shape */
     width: 100%;
     padding: 10px 0;
     margin-top: 10px;
     
     /* NEW: Circular Aesthetic */
-    height: 40px; /* Adjust height to match padding for a good fit */
-    border-radius: 20px; /* High value makes it pill/circular */
+    height: 40px; 
+    border-radius: 20px; 
     
     /* Color and Font */
-    background-color: #FF6347; /* Tomato Red for visibility */
+    background-color: #FF6347; 
     color: white;
     font-weight: bold;
     border: none;
@@ -195,11 +195,11 @@ body, html {
     transition: background-color 0.2s, transform 0.1s;
 }
 
-.circular-button:hover {
+.snapshot-button:hover {
     background-color: #e55338;
 }
 
-.circular-button:active {
+.snapshot-button:active {
     transform: translateY(1px);
 }
 
