@@ -11,9 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
-    // FIX: Removed the failing const dotConnectionsSVG = document.getElementById('dot-connections-svg'); 
-    // The selector is now inside the drawing functions where it's needed.
-
+    // NOTE: dotConnectionsSVG is intentionally fetched inside drawing functions for reliability.
+    
     // --- 2. State and Configuration Variables ---
     let dots = [];
     let mouseX = 0;
@@ -22,13 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
-    let currentNumDots = parseInt(numDotsInput.value) || 25;
+    
+    // FIX: Ensure dots load even if input value is initially empty/zero.
+    let currentNumDots = parseInt(numDotsInput.value) || 25; 
     
     let isScattered = false;      
     let isConnectMode = false;    
     
-    let activeConnection = null;  // Stores the first dot clicked in a pair
-    let dotConnections = {};      // Stores the connections: { dotIndex: [connectedDot1Index, ...] }
+    let activeConnection = null;  
+    let dotConnections = {};      
     
     // Animation/Transition Variables
     const floatIntensity = 0.005; 
@@ -149,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. Connect-The-Dots Logic ---
     
     function drawConnectionLines() {
-        // FIX: Get the element inside the function to guarantee it's available
+        // FIX: Get the element inside the function for reliability
         const svgElement = document.getElementById('dot-connections-svg');
         if (!svgElement) return;
 
@@ -178,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     line.setAttribute('x2', x2);
                     line.setAttribute('y2', y2);
                     
-                    // Contrast color for visibility
                     line.setAttribute('stroke', '#FFFFFF'); 
                     
                     line.setAttribute('stroke-width', 3);
@@ -267,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         activeConnection = null; 
         dotConnections = {};
         
-        // FIX: Get the element before clearing it
         const svgElement = document.getElementById('dot-connections-svg');
         if (svgElement) {
             svgElement.innerHTML = ''; 
@@ -416,37 +415,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-captureButton.addEventListener('click', () => {
-    // Hide the sidebar temporarily to take a clean screenshot of the main canvas
-    const sidebar = document.getElementById('sidebar');
-    const captureWidth = window.innerWidth;
-    const captureHeight = window.innerHeight;
+// FIX: Attach the Capture Button listener here, after the element is selected and ready.
+const captureButton = document.getElementById('captureButton'); 
+if (captureButton) {
+    captureButton.addEventListener('click', () => {
+        // Hide the sidebar temporarily to take a clean screenshot of the main canvas
+        const sidebar = document.getElementById('sidebar');
+        const captureWidth = window.innerWidth;
+        const captureHeight = window.innerHeight;
 
-    // Temporarily hide sidebar for the screenshot
-    sidebar.style.display = 'none'; 
+        // Temporarily hide sidebar for the screenshot
+        sidebar.style.display = 'none'; 
 
-    // Use html2canvas to capture the entire visible area (body)
-    html2canvas(document.body, { 
-        width: captureWidth,
-        height: captureHeight,
-        scale: 2, // Use scale 2 for a high-resolution (2x) image
-        logging: false
-    }).then(canvas => {
-        // Create a link to download the image
-        const image = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = 'dotted_capture.png';
-        
-        // Append to body, click it, and remove it immediately
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Show the sidebar again
-        sidebar.style.display = 'flex';
+        // Use html2canvas to capture the entire visible area (body)
+        // NOTE: html2canvas library must be loaded via a <script> tag in index.html
+        html2canvas(document.body, { 
+            width: captureWidth,
+            height: captureHeight,
+            scale: 2, // Use scale 2 for a high-resolution (2x) image
+            logging: false
+        }).then(canvas => {
+            // Create a link to download the image
+            const image = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = 'dotted_capture.png';
+            
+            // Append to body, click it, and remove it immediately
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show the sidebar again
+            sidebar.style.display = 'flex';
+        });
     });
-});
+}
 
 
     // --- 9. Initialization (Runs Once) ---
