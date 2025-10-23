@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Animation/Transition Variables
     const floatIntensity = 0.005; 
     const maxFloatDistance = 5;   
-    const scatterTransition = 'all 0.5s ease-out'; // ADDED: Smooth transition style
+    const scatterTransition = 'all 0.5s ease-out';
     
     // Background Variables
     const backgroundImages = [
@@ -209,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.style.cursor = 'default';
             dot.style.opacity = 1;       
             dot.style.backgroundColor = currentDotColor; 
+            
+            // USE removeEventListener to reliably remove the click handler
             dot.removeEventListener('click', handleDotClick); 
             
             dot.style.transform = 'none'; // Remove GPU acceleration
@@ -249,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const sidebarWidth = 280; 
 
             dots.forEach(dot => {
-                // ADDED: Enable transition for scatter
                 dot.style.transition = scatterTransition; 
 
                 const minX = sidebarWidth;
@@ -260,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.left = `${randomX - currentDotSize / 2}px`;
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
 
-                // FIX: Force GPU acceleration
                 dot.style.transform = 'translateZ(0)';
             });
             
@@ -272,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dots.forEach(dot => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
+                // CRUCIAL FIX: Use addEventListener for reliable click handling
                 dot.addEventListener('click', handleDotClick); 
             });
 
@@ -286,11 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // State 2: SCATTER/CONNECT -> FOLLOW (Smooth Gather In)
 
             dots.forEach(dot => {
-                // Enable transition for smooth gather-in effect
                 dot.style.transition = scatterTransition;
             });
             
-            // Set state back to follow mode (dots start following target coordinates)
             resetConnectMode(false); 
 
             // REMOVE transition after it completes (0.5s) to enable smooth frame-by-frame following
