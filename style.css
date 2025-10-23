@@ -113,15 +113,9 @@ body, html {
     transform: translateY(1px);
 }
 
-/* Styling for generic inputs (range, color, file) */
 .setting-group input[type="range"] {
     /* ... (range styles) ... */
 }
-/* ... (color and file input styles) ... */
-
-/* ----------------------------------------------------- */
-/* MAIN CONTENT / DOTS / VIDEO STYLES */
-/* ----------------------------------------------------- */
 
 #main-content {
     flex-grow: 1;
