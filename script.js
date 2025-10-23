@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const numDotsValueSpan = document.getElementById('numDotsValue');
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
-    const slideshowToggle = document.getElementById('slideshowToggle'); // ADD THIS
+    const slideshowToggle = document.getElementById('slideshowToggle');
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -21,35 +21,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
-    let isScattered = false; // Controls scatter/follow mode
-
-    // ... after your existing state variables ...
-    let isConnectMode = false; 
-    let connectedDots = [];
-    const connectTolerance = 40; 
-
-    // ADD THESE NEW FLOAT VARIABLES
-    const floatIntensity = 0.005; // How much they move each frame (small number for subtle movement)
-    const maxFloatDistance = 5; // Max distance in pixels they can drift from their scatter point
-    // NOTE: Since the dots are not truly static, we don't need to store their scatter point, 
-    // we'll just let them constantly drift.
     
-    // Custom Backgrounds Array (Ensure these filenames match your uploaded files exactly!)
+    let isScattered = false;      // Controls scatter/follow mode (also controls floating)
+    let isConnectMode = false;    // Tracks if the connection game is active
+    let connectedDots = [];       // Array to store the dots in the order they are connected
+    const connectTolerance = 40;  // Max distance (px) for a successful click/connection
+    
+    const floatIntensity = 0.005; // Intensity for scattered dot floating motion
+    const maxFloatDistance = 5;   // Max distance (px) for dot drift
+    
     const backgroundImages = [
-        'fall.jpg',
-        'cat.jpg',
-        'beach.jpeg',
-        'houses.jpg',
-        'kusama.jpg',
-        'museum.jpeg',
-        'park.jpg',
-        'sashimi.jpg',
-        'studio.jpg',
-        'trees.jpg',
-        'water.jpg'
+        'fall.jpg', 'cat.jpg', 'beach.jpeg', 'houses.jpg', 
+        'kusama.jpg', 'museum.jpeg', 'park.jpg', 'sashimi.jpg', 
+        'studio.jpg', 'trees.jpg', 'water.jpg'
     ];
-    let currentBgIndex = -1; // Start at -1 so first rotateBackground lands on index 0
-    let backgroundInterval; // Defined here to be accessible throughout
+    let currentBgIndex = -1; 
+    let backgroundInterval; 
 
     // --- 3. Dot Management Functions ---
     function createDot() {
@@ -58,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dot.style.width = `${currentDotSize}px`;
         dot.style.height = `${currentDotSize}px`;
         dot.style.backgroundColor = currentDotColor;
-        // Position dots initially randomly within the main content bounds
         const rect = mainContent.getBoundingClientRect();
         dot.style.left = `${Math.random() * rect.width}px`;
         dot.style.top = `${Math.random() * rect.height}px`;
@@ -82,63 +68,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// --- 4. Animation Loop ---
-function animateDots() {
-    
-    if (!isScattered) { 
-        // --- FOLLOW MODE LOGIC ---
+    // --- 4. Animation Loop ---
+    function animateDots() {
         
-        dots.forEach((dot, index) => {
-            let targetX = mouseX;
-            let targetY = mouseY;
+        if (!isScattered) { 
+            // FOLLOW MODE LOGIC 
+            dots.forEach((dot, index) => {
+                let targetX = mouseX;
+                let targetY = mouseY;
 
-            // ... (keep all your existing follow logic here) ...
-            if (index > 0) {
-                targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
-                targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
-            }
+                if (index > 0) {
+                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
+                }
 
-            const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-            const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
 
-            const dx = targetX - currentX;
-            const dy = targetY - currentY;
+                const dx = targetX - currentX;
+                const dy = targetY - currentY;
 
-            dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-            dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-        });
-        
-    } else {
-        // --- SCATTER/FLOAT MODE LOGIC ---
-        // Apply a gentle, random drift using sine and cosine waves for smooth motion
-        
-        const time = Date.now() * floatIntensity; // Time-based factor for synchronized motion
-
-        dots.forEach((dot, index) => {
+                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+            });
             
-            // Get the dot's current position (relative to mainContent)
-            let currentX = parseFloat(dot.style.left);
-            let currentY = parseFloat(dot.style.top);
+        } else {
+            // SCATTER/FLOAT MODE LOGIC 
+            const time = Date.now() * floatIntensity;
 
-            // Calculate subtle displacement using trigonometric functions for smooth oscillation.
-            // Using the dot's index makes each dot float on a slightly different path.
-            const floatX = Math.sin(time + index) * maxFloatDistance;
-            const floatY = Math.cos(time + index) * maxFloatDistance;
-            
-            // Apply the small float change to the position
-            // NOTE: We use a very small factor (0.01) to make the float extremely subtle.
-            dot.style.left = `${currentX + floatX * 0.01}px`; 
-            dot.style.top = `${currentY + floatY * 0.01}px`;
-        });
+            dots.forEach((dot, index) => {
+                let currentX = parseFloat(dot.style.left);
+                let currentY = parseFloat(dot.style.top);
+
+                const floatX = Math.sin(time + index) * maxFloatDistance;
+                const floatY = Math.cos(time + index) * maxFloatDistance;
+                
+                dot.style.left = `${currentX + floatX * 0.01}px`; 
+                dot.style.top = `${currentY + floatY * 0.01}px`;
+            });
+        }
+        
+        requestAnimationFrame(animateDots);
     }
     
-    requestAnimationFrame(animateDots);
-}
-    
     // --- 5. Background Image Functions ---
+    
+    function startSlideshow() {
+        if (slideshowToggle.checked) {
+            clearInterval(backgroundInterval); 
+            rotateBackground(); 
+            backgroundInterval = setInterval(rotateBackground, 20000); 
+        }
+    }
+
+    function stopSlideshow() {
+        clearInterval(backgroundInterval);
+    }
+
     function preloadImages(imageArray) {
         imageArray.forEach((url) => {
-            new Image().src = url; // Starts downloading the image
+            new Image().src = url; 
         });
     }
 
@@ -151,25 +140,80 @@ function animateDots() {
         document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
     }
 
-    // --- 6. Event Handlers ---
+    // --- 6. Connect-The-Dots Logic ---
+    
+    function isDotEligible(dot) {
+        // Simple logic: any unconnected dot is connectable
+        return !connectedDots.includes(dot); 
+    }
+
+    function handleDotClick(e) {
+        e.stopPropagation(); 
+
+        if (!isConnectMode) return;
+
+        const clickedDot = e.currentTarget; 
+        
+        if (connectedDots.includes(clickedDot)) {
+            return; // Ignore clicks on already connected dots
+        }
+
+        if (connectedDots.length === 0 || isDotEligible(clickedDot)) {
+            
+            connectedDots.push(clickedDot);
+            
+            // Visual Feedback
+            clickedDot.style.opacity = 0.5; 
+            clickedDot.style.backgroundColor = '#FF6347'; // Highlight color: Tomato 
+
+            // Check for Completion
+            if (connectedDots.length === dots.length) {
+                resetConnectMode(true);
+            }
+        }
+    }
+
+    function resetConnectMode(success = false) {
+        dots.forEach(dot => {
+            dot.style.boxShadow = 'none'; 
+            dot.style.cursor = 'default';
+            dot.style.opacity = 1;       
+            dot.style.backgroundColor = currentDotColor; // Restore color
+            dot.removeEventListener('click', handleDotClick); 
+        });
+        
+        isScattered = false;
+        isConnectMode = false;
+        connectedDots = [];
+        
+        if (success) {
+            // Re-apply follow behavior immediately
+            console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
+        }
+    }
+
+    // --- 7. Event Handlers ---
     
     // Mouse Move (Only updates target coordinates if not scattered)
     mainContent.addEventListener('mousemove', (e) => {
         if (!isScattered) {
             const rect = mainContent.getBoundingClientRect();
-            // Calculate mouse position relative to mainContent and center the dot
             mouseX = e.clientX - rect.left - currentDotSize / 2; 
             mouseY = e.clientY - rect.top - currentDotSize / 2;  
         }
     }); 
 
-// Double Click (Toggle Scatter/Connect State)
-    mainContent.addEventListener('dblclick', () => {
+    // Double Click (Toggle Scatter/Connect State)
+    mainContent.addEventListener('dblclick', (e) => {
+        // Prevent double-click reset if user is clicking a dot
+        if (e.target.classList.contains('dot')) {
+            return; 
+        }
         
         if (!isScattered && !isConnectMode) {
             // State 1: FOLLOW -> SCATTER/CONNECT
             
-            // SCATTER LOGIC (Keep existing scatter code)
+            // SCATTER LOGIC
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
             const sidebarWidth = 280; 
@@ -180,40 +224,30 @@ function animateDots() {
                 const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
-                dot.style.transition = 'left 0.5s ease-out, top 0.5s ease-out';
+                dot.style.transition = 'none'; // Ensure floating can start immediately
                 dot.style.left = `${randomX - currentDotSize / 2}px`;
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
             });
             
             // Set new state
             isScattered = true;
-            isConnectMode = true; // Enter the connection game mode
-            connectedDots = []; // Reset the connection tracker
+            isConnectMode = true; 
+            connectedDots = []; 
             
-            // Add visual indication for Connect Mode (e.g., make dots glow)
+            // Add visual indication for Connect Mode 
             dots.forEach(dot => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                dot.style.cursor = 'pointer'; // Indicate they are clickable
-                dot.onclick = handleDotClick; // Attach click handler
+                dot.style.cursor = 'pointer'; 
+                dot.addEventListener('click', handleDotClick); 
             });
 
         } else if (isConnectMode) {
-            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Reset)
-
-            resetConnectMode();
+            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Double-Click Reset)
+            resetConnectMode(false); 
         }
-        
-        // SCATTER LOGIC...
-            dots.forEach(dot => {
-                // Ensure transitions are off so the floating motion is smooth
-                dot.style.transition = 'none'; // ADD/CONFIRM THIS LINE IS HERE
-                
-                // ... (rest of scatter position logic) ...
-            });
-            // ...
     });
 
-    // --- 7. Sidebar Control Listeners ---
+    // --- 8. Sidebar Control Listeners ---
     
     dotSizeInput.addEventListener('input', (e) => {
         currentDotSize = parseInt(e.target.value);
@@ -244,9 +278,9 @@ function animateDots() {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                // Stop rotation when custom file is uploaded
-                clearInterval(backgroundInterval); 
-                
+                stopSlideshow(); 
+                slideshowToggle.checked = false;
+
                 const container = document.getElementById('container');
                 container.style.backgroundImage = `url('${event.target.result}')`;
                 document.documentElement.style.setProperty('--bg-image', `url('${event.target.result}')`);
@@ -256,121 +290,32 @@ function animateDots() {
     });
 
     defaultBackgroundsSelect.addEventListener('change', (e) => {
-    const bgFileName = e.target.value; 
+        const bgFileName = e.target.value; 
 
-    if (bgFileName) {
-        // Stop rotation when a specific background is chosen
-        stopSlideshow(); // Use the new function
-        slideshowToggle.checked = false; // Uncheck the toggle
-        
-        const container = document.getElementById('container');
-        container.style.backgroundImage = `url('${bgFileName}')`;
-        document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
-    }
-});
-        slideshowToggle.addEventListener('change', () => {
-    if (slideshowToggle.checked) {
-        startSlideshow();
-    } else {
-        stopSlideshow();
-    }
-    });
-
-
-// --- 8. Initialization (Runs Once) ---
-
-// Define the functions to control the slideshow
-function startSlideshow() {
-    // Only start if it's not already running and the toggle is checked
-    if (slideshowToggle.checked) {
-        // Clear any existing interval just to be safe
-        clearInterval(backgroundInterval); 
-        // Set initial background image and start rotation
-        rotateBackground(); 
-        backgroundInterval = setInterval(rotateBackground, 20000); 
-    }
-}
-
-function stopSlideshow() {
-    clearInterval(backgroundInterval);
-}
-
-preloadImages(backgroundImages);
-initializeDots(currentNumDots);
-animateDots();
-
-// Initial call to start the slideshow if the checkbox is checked by default
-startSlideshow();
-
-function handleDotClick(e) {
-    e.stopPropagation(); // Prevent dblclick from triggering again
-
-    if (!isConnectMode) return;
-
-    const clickedDot = e.target;
-    const clickedIndex = dots.indexOf(clickedDot);
-
-    // 1. First Connection
-    if (connectedDots.length === 0) {
-        // Any dot can be the starting point
-        connectedDots.push(clickedDot);
-        clickedDot.style.opacity = 0.5; // Visual feedback: connected
-        
-    } 
-    // 2. Subsequent Connections
-    else {
-        const lastDot = connectedDots[connectedDots.length - 1];
-        
-        // Check if the current click is NOT the last connected dot (prevent double-click on the same dot)
-        if (clickedDot === lastDot) return; 
-
-        // Get coordinates of the last connected dot and the clicked dot
-        const lastX = parseFloat(lastDot.style.left) + currentDotSize / 2;
-        const lastY = parseFloat(lastDot.style.top) + currentDotSize / 2;
-        const currentX = parseFloat(clickedDot.style.left) + currentDotSize / 2;
-        const currentY = parseFloat(clickedDot.style.top) + currentDotSize / 2;
-        
-        // Check if the clicked dot is the *next in sequence* based on index
-        // To enforce sequential connection:
-        // const nextDotIndex = dots.indexOf(lastDot) + 1;
-        // if (nextDotIndex === clickedIndex) { ... }
-        
-        // --- RELAXED CONNECTION LOGIC (Allows clicking any UNCONNECTED dot) ---
-        if (!connectedDots.includes(clickedDot)) {
-            connectedDots.push(clickedDot);
-            clickedDot.style.opacity = 0.5; // Visual feedback: connected
+        if (bgFileName) {
+            stopSlideshow();
+            slideshowToggle.checked = false;
             
-            // ************ VISUAL LINE DRAWING (Basic Implementation) ************
-            // You would need a library or SVG/Canvas to draw persistent lines.
-            // For now, we'll just update the dots' appearance.
+            const container = document.getElementById('container');
+            container.style.backgroundImage = `url('${bgFileName}')`;
+            document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
         }
-    }
-    
-    // 3. Check for Completion
-    if (connectedDots.length === dots.length) {
-        // ALL dots are connected! Reset to follow mode.
-        resetConnectMode(true);
-    }
-}
-
-function resetConnectMode(success = false) {
-    // 1. Clean up dot visuals
-    dots.forEach(dot => {
-        dot.style.boxShadow = 'none'; // Remove glow
-        dot.style.cursor = 'default';
-        dot.style.opacity = 1;       // Restore opacity
-        dot.onclick = null;          // Remove click handler
     });
     
-    // 2. Clear state
-    isScattered = false;
-    isConnectMode = false;
-    connectedDots = [];
-    
-    // 3. Optional: Add a success message
-    if (success) {
-        console.log("Success! All dots connected. Reverting to Follow Mode.");
-    }
-}
+    slideshowToggle.addEventListener('change', () => {
+        if (slideshowToggle.checked) {
+            startSlideshow();
+        } else {
+            stopSlideshow();
+        }
+    });
 
-}); // <-- CLOSES the DOMContentLoaded listener
+
+    // --- 9. Initialization (Runs Once) ---
+
+    preloadImages(backgroundImages);
+    initializeDots(currentNumDots);
+    animateDots();
+    startSlideshow(); // Starts rotation if the checkbox is checked by default
+
+});
