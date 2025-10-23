@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
-    const dotConnectionsSVG = document.getElementById('dot-connections-svg');
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isConnectMode = false;    
     let connectedDots = [];       
     
-    // NEW: Graph connection state variables
     let activeConnection = null;  // Stores the first dot clicked in a pair: { dot: element, index: number }
     let dotConnections = {};      // Stores the connections: { dotIndex: [connectedDot1Index, ...] }
     
@@ -150,7 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. Connect-The-Dots Logic ---
     
     function drawConnectionLines() {
-        dotConnectionsSVG.innerHTML = ''; 
+        // FIX: Get the element inside the function to guarantee it's available
+        const svgElement = document.getElementById('dot-connections-svg');
+        if (!svgElement) return;
+
+        svgElement.innerHTML = ''; 
 
         const linesDrawn = new Set(); 
 
@@ -160,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
             connectedArray.forEach(connectedIndex => {
                 const partnerDot = dots[connectedIndex];
                 
-                // Create a unique key (e.g., "1-5") to prevent drawing the line twice
                 const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
 
                 if (!linesDrawn.has(key)) {
@@ -175,12 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     line.setAttribute('y1', y1);
                     line.setAttribute('x2', x2);
                     line.setAttribute('y2', y2);
-                    line.setAttribute('stroke', currentDotColor); 
+                    
+                    // Use a contrasting color for visibility
+                    line.setAttribute('stroke', '#FFD700'); 
+                    
                     line.setAttribute('stroke-width', 2);
                     line.setAttribute('stroke-linecap', 'round');
                     line.setAttribute('stroke-dasharray', '5, 5'); 
 
-                    dotConnectionsSVG.appendChild(line);
+                    svgElement.appendChild(line);
                     linesDrawn.add(key);
                 }
             });
@@ -203,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function isDotEligible(dot) {
-        // In the free-form graph mode, any unconnected dot can be the second click
         return true; 
     }
 
@@ -256,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetConnectMode(success = false) {
         dots.forEach(dot => {
-            // Reset transforms and visuals
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
             dot.style.opacity = 1;       
@@ -270,11 +272,14 @@ document.addEventListener('DOMContentLoaded', () => {
         isScattered = false;
         isConnectMode = false;
         
-        // NEW: Reset connection specific variables
         activeConnection = null; 
         dotConnections = {};
         
-        dotConnectionsSVG.innerHTML = ''; // CLEAR THE SVG LINES
+        // FIX: Get the element before clearing it
+        const svgElement = document.getElementById('dot-connections-svg');
+        if (svgElement) {
+            svgElement.innerHTML = ''; 
+        }
 
         if (success) {
             console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
@@ -322,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isScattered = true;
             isConnectMode = true; 
             
-            // Clear any lingering connection state
             activeConnection = null;
             dotConnections = {}; 
             
@@ -332,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.addEventListener('click', handleDotClick); 
             });
 
-            // REMOVE transition after it completes (0.5s) to enable smooth floating
+            // REMOVE transition after it completes (0.5s)
             setTimeout(() => {
                 dots.forEach(dot => {
                     dot.style.transition = 'none';
