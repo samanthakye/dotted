@@ -23,9 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentNumDots = parseInt(numDotsInput.value);
     let isScattered = false; // Controls scatter/follow mode
 
-    let isConnectMode = false; // Tracks if the connection game is active
-    let connectedDots = [];    // Array to store the dots in the order they are connected
-    const connectTolerance = 40; // Max distance (px) for a successful click/connection
+    // ... after your existing state variables ...
+    let isConnectMode = false; 
+    let connectedDots = [];
+    const connectTolerance = 40; 
+
+    // ADD THESE NEW FLOAT VARIABLES
+    const floatIntensity = 0.005; // How much they move each frame (small number for subtle movement)
+    const maxFloatDistance = 5; // Max distance in pixels they can drift from their scatter point
+    // NOTE: Since the dots are not truly static, we don't need to store their scatter point, 
+    // we'll just let them constantly drift.
     
     // Custom Backgrounds Array (Ensure these filenames match your uploaded files exactly!)
     const backgroundImages = [
@@ -75,39 +82,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. Animation Loop ---
-    function animateDots() {
-        // Only run movement logic if the dots are NOT scattered
-        if (!isScattered) { 
-            dots.forEach((dot, index) => {
-                let targetX = mouseX;
-                let targetY = mouseY;
-
-                if (index > 0) {
-                    // Each dot follows the previous dot's center
-                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
-                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
-                }
-
-                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-                const dx = targetX - currentX;
-                const dy = targetY - currentY;
-
-                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-            });
-        }
+// --- 4. Animation Loop ---
+function animateDots() {
+    
+    if (!isScattered) { 
+        // --- FOLLOW MODE LOGIC ---
         
-        requestAnimationFrame(animateDots);
+        dots.forEach((dot, index) => {
+            let targetX = mouseX;
+            let targetY = mouseY;
 
-        function getDistance(x1, y1, x2, y2) {
-    const dx = x1 - x2;
-    const dy = y1 - y2;
-    return Math.sqrt(dx * dx + dy * dy);
-}
+            // ... (keep all your existing follow logic here) ...
+            if (index > 0) {
+                targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
+                targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
+            }
+
+            const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+            const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+            const dx = targetX - currentX;
+            const dy = targetY - currentY;
+
+            dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+            dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+        });
+        
+    } else {
+        // --- SCATTER/FLOAT MODE LOGIC ---
+        // Apply a gentle, random drift using sine and cosine waves for smooth motion
+        
+        const time = Date.now() * floatIntensity; // Time-based factor for synchronized motion
+
+        dots.forEach((dot, index) => {
+            
+            // Get the dot's current position (relative to mainContent)
+            let currentX = parseFloat(dot.style.left);
+            let currentY = parseFloat(dot.style.top);
+
+            // Calculate subtle displacement using trigonometric functions for smooth oscillation.
+            // Using the dot's index makes each dot float on a slightly different path.
+            const floatX = Math.sin(time + index) * maxFloatDistance;
+            const floatY = Math.cos(time + index) * maxFloatDistance;
+            
+            // Apply the small float change to the position
+            // NOTE: We use a very small factor (0.01) to make the float extremely subtle.
+            dot.style.left = `${currentX + floatX * 0.01}px`; 
+            dot.style.top = `${currentY + floatY * 0.01}px`;
+        });
     }
+    
+    requestAnimationFrame(animateDots);
+}
     
     // --- 5. Background Image Functions ---
     function preloadImages(imageArray) {
@@ -176,6 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             resetConnectMode();
         }
+        
+        // SCATTER LOGIC...
+            dots.forEach(dot => {
+                // Ensure transitions are off so the floating motion is smooth
+                dot.style.transition = 'none'; // ADD/CONFIRM THIS LINE IS HERE
+                
+                // ... (rest of scatter position logic) ...
+            });
+            // ...
     });
 
     // --- 7. Sidebar Control Listeners ---
