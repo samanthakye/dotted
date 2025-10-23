@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
+    const dotConnectionsSVG = document.getElementById('dot-connections-svg');
+    const captureButton = document.getElementById('captureButton'); // ADD THIS
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -423,6 +425,38 @@ document.addEventListener('DOMContentLoaded', () => {
             stopSlideshow();
         }
     });
+
+captureButton.addEventListener('click', () => {
+    // Hide the sidebar temporarily to take a clean screenshot of the main canvas
+    const sidebar = document.getElementById('sidebar');
+    const captureWidth = window.innerWidth;
+    const captureHeight = window.innerHeight;
+
+    // Temporarily hide sidebar for the screenshot
+    sidebar.style.display = 'none'; 
+
+    // Use html2canvas to capture the entire visible area (body)
+    html2canvas(document.body, { 
+        width: captureWidth,
+        height: captureHeight,
+        scale: 2, // Use scale 2 for a high-resolution (2x) image
+        logging: false
+    }).then(canvas => {
+        // Create a link to download the image
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'dotted_capture.png';
+        
+        // Append to body, click it, and remove it immediately
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show the sidebar again
+        sidebar.style.display = 'flex';
+    });
+});
 
 
     // --- 9. Initialization (Runs Once) ---

@@ -174,5 +174,34 @@ body, html {
     z-index: 999; /* Ensure lines are behind the dots */
 }
 
+/* Style for the Capture Button */
+.circular-button {
+    /* Dimensions and Shape */
+    width: 100%;
+    padding: 10px 0;
+    margin-top: 10px;
+    
+    /* NEW: Circular Aesthetic */
+    height: 40px; /* Adjust height to match padding for a good fit */
+    border-radius: 20px; /* High value makes it pill/circular */
+    
+    /* Color and Font */
+    background-color: #FF6347; /* Tomato Red for visibility */
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.circular-button:hover {
+    background-color: #e55338;
+}
+
+.circular-button:active {
+    transform: translateY(1px);
+}
+
 /* Ensure the font Inter is available, or use a system fallback */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
