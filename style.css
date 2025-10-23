@@ -1,9 +1,10 @@
 :root {
+    --bg-image: url('fall.JPG'); 
     --dot-color: #ffffff;
-    --border-color: #555555; /* Darkened border for contrast */
-    --text-color: #ffffff; /* Text color changed to White */
-    --sidebar-bg: #111111; /* Sidebar background changed to Dark/Black */
-    --main-bg: #111111;
+    --border-color: rgba(0, 0, 0, 0.2); /* Dark, slight translucent border */
+    --text-color: #111111; /* Text color changed to Dark/Black for contrast */
+    --sidebar-bg: rgba(255, 255, 255, 0.8); /* Translucent White (80% opacity) */
+    --main-bg: #f0f0f0;
     --dot-size: 25px;
 }
 
