@@ -178,9 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     line.setAttribute('y2', y2);
                     
                     // Use a contrasting color for visibility
-                    line.setAttribute('stroke', '#FFD700'); 
+                    line.setAttribute('stroke', '#ffffffff'); 
                     
-                    line.setAttribute('stroke-width', 2);
+                    line.setAttribute('stroke-width', 3);
                     line.setAttribute('stroke-linecap', 'round');
                     line.setAttribute('stroke-dasharray', '5, 5'); 
 
