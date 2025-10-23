@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dotted.</title>
     <link rel="stylesheet" href="style.css">
-</head>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    </head>
 <body>
     <div id="container">
         
@@ -29,6 +30,13 @@
                 <label for="numDots">Number of Dots:</label>
                 <input type="range" id="numDots" min="1" max="100" value="25">
                 <span id="numDotsValue">25</span>
+            </div>
+            <div class="setting-group">
+                <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
+            </div>
+            
+            <div class="setting-group">
+                <button id="cameraToggleButton" class="circular-button">👁️ Camera Mode</button>
             </div>
             <div class="setting-group">
                 <label for="backgroundImageUpload">Upload Background:</label>
@@ -60,19 +68,14 @@
         </aside>
 
         <main id="main-content">
+            <video id="webcamFeed" style="display: none;" autoplay playsinline></video>
+            
             <svg id="dot-connections-svg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"></svg>
         </main>
             
     </div>
 
     <script src="script.js"></script>
-
-<div class="setting-group">
-    <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
-</div>
-            
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="script.js"></script>
-
+    
 </body>
 </html>
