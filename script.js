@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const numDotsInput = document.getElementById('numDots');
     const numDotsValueSpan = document.getElementById('numDotsValue');
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
-    const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds'); // For dropdown
+    const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
+    const slideshowToggle = document.getElementById('slideshowToggle'); // ADD THIS
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -205,28 +206,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     defaultBackgroundsSelect.addEventListener('change', (e) => {
-        const bgFileName = e.target.value; 
+    const bgFileName = e.target.value; 
 
-        if (bgFileName) {
-            // Stop rotation when a specific background is chosen
-            clearInterval(backgroundInterval);
-            
-            const container = document.getElementById('container');
-            container.style.backgroundImage = `url('${bgFileName}')`;
-            document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
-        }
+    if (bgFileName) {
+        // Stop rotation when a specific background is chosen
+        stopSlideshow(); // Use the new function
+        slideshowToggle.checked = false; // Uncheck the toggle
+        
+        const container = document.getElementById('container');
+        container.style.backgroundImage = `url('${bgFileName}')`;
+        document.documentElement.style.setProperty('--bg-image', `url('${bgFileName}')`);
+    }
+});
+        slideshowToggle.addEventListener('change', () => {
+    if (slideshowToggle.checked) {
+        startSlideshow();
+    } else {
+        stopSlideshow();
+    }
     });
 
 
-    // --- 8. Initialization (Runs Once) ---
-    
-    preloadImages(backgroundImages);
-    initializeDots(currentNumDots);
-    animateDots();
+// --- 8. Initialization (Runs Once) ---
 
-    // Set initial background image and start rotation
-    rotateBackground();
-    // Rotate every 20 seconds (20000ms)
-    backgroundInterval = setInterval(rotateBackground, 20000); 
+// Define the functions to control the slideshow
+function startSlideshow() {
+    // Only start if it's not already running and the toggle is checked
+    if (slideshowToggle.checked) {
+        // Clear any existing interval just to be safe
+        clearInterval(backgroundInterval); 
+        // Set initial background image and start rotation
+        rotateBackground(); 
+        backgroundInterval = setInterval(rotateBackground, 20000); 
+    }
+}
+
+function stopSlideshow() {
+    clearInterval(backgroundInterval);
+}
+
+preloadImages(backgroundImages);
+initializeDots(currentNumDots);
+animateDots();
+
+// Initial call to start the slideshow if the checkbox is checked by default
+startSlideshow();
 
 }); // <-- CLOSES the DOMContentLoaded listener
