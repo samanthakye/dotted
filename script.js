@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
+    const dotConnectionsSVG = document.getElementById('dot-connections-svg');
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -22,9 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
     
-    let isScattered = false;      // Controls scatter/follow mode (and floating)
-    let isConnectMode = false;    // Tracks if the connection game is active
-    let connectedDots = [];       // Array to store the dots in the order they are connected
+    let isScattered = false;      
+    let isConnectMode = false;    
+    let connectedDots = [];       
     
     // Floating Dot Variables
     const floatIntensity = 0.005; 
@@ -104,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const floatX = Math.sin(time + index) * maxFloatDistance;
                 const floatY = Math.cos(time + index) * maxFloatDistance;
                 
-                // Apply the floating nudge
                 dot.style.left = `${currentX + floatX * 0.01}px`; 
                 dot.style.top = `${currentY + floatY * 0.01}px`;
             });
@@ -144,6 +144,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Connect-The-Dots Logic ---
     
+    function drawConnectionLines() {
+        // 1. Clear any existing lines
+        dotConnectionsSVG.innerHTML = ''; 
+
+        if (connectedDots.length < 2) return;
+
+        // 2. Iterate through connected dots and draw lines between pairs
+        for (let i = 0; i < connectedDots.length - 1; i++) {
+            const startDot = connectedDots[i];
+            const endDot = connectedDots[i + 1];
+
+            // Get center coordinates relative to the SVG container
+            const x1 = parseFloat(startDot.style.left) + currentDotSize / 2;
+            const y1 = parseFloat(startDot.style.top) + currentDotSize / 2;
+            const x2 = parseFloat(endDot.style.left) + currentDotSize / 2;
+            const y2 = parseFloat(endDot.style.top) + currentDotSize / 2;
+
+            // Create an SVG <line> element
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke', currentDotColor); 
+            line.setAttribute('stroke-width', 2);
+            line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('stroke-dasharray', '5, 5'); 
+
+            dotConnectionsSVG.appendChild(line);
+        }
+    }
+
     function isDotEligible(dot) {
         return !connectedDots.includes(dot); 
     }
@@ -166,6 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Visual Feedback
             clickedDot.style.opacity = 0.5; 
             clickedDot.style.backgroundColor = '#FF6347'; 
+            
+            drawConnectionLines(); // DRAW THE LINE HERE
 
             // Check for Completion
             if (connectedDots.length === dots.length) {
@@ -191,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isConnectMode = false;
         connectedDots = [];
         
+        dotConnectionsSVG.innerHTML = ''; // CLEAR THE SVG LINES
+
         if (success) {
             console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
         }
@@ -232,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.left = `${randomX - currentDotSize / 2}px`;
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
 
-                // ADDED FIX: Force GPU acceleration for sharp floating dots
+                // FIX: Force GPU acceleration for sharp floating dots
                 dot.style.transform = 'translateZ(0)';
             });
             
