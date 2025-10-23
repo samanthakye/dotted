@@ -89,50 +89,88 @@ body, html {
 /* BUTTON AND INPUT STYLES */
 /* ----------------------------------------------------- */
 
+/* FIX: Range Input Track Color (The Bar) changed to black */
+.setting-group input[type="range"] {
+    width: 100%;
+    height: 4px;
+    background: #111111; /* Changed to Black/Dark */
+    outline: none;
+    opacity: 0.9; /* Slightly less opaque for better visibility */
+    transition: opacity .2s;
+}
+
+.setting-group input[type="range"]:hover {
+    opacity: 1;
+}
+
+/* FIX: Range Input Thumb (The Knob) color inherited from --text-color (dark) */
+.setting-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--text-color); /* Uses dark text color */
+    cursor: pointer;
+    border: 2px solid var(--sidebar-bg);
+}
+
+/* FIX: Capture and Camera Mode Buttons Base Color changed to black */
 .circular-button, .snapshot-button {
     width: 100%;
     padding: 10px 0;
     margin-top: 10px;
     height: 40px; 
-    border-radius: 20px; /* Pill Shape */
+    border-radius: 20px; 
     
-    background-color: #FF6347; 
-    color: white;
+    background-color: #111111; /* Changed base color to Black */
+    color: white; /* Text remains white */
     font-weight: bold;
     border: none;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Darkened shadow */
     transition: background-color 0.2s, transform 0.1s;
 }
 
 .circular-button:hover, .snapshot-button:hover {
-    background-color: #e55338;
+    background-color: #333333; /* Slightly lighter black on hover */
 }
 
 .circular-button:active, .snapshot-button:active {
     transform: translateY(1px);
 }
 
-.setting-group input[type="range"] {
-    /* ... (range styles) ... */
+/* Styling for other input types remains the same */
+.setting-group input[type="color"] {
+    border: none;
+    width: 40px;
+    height: 25px;
+    background: none;
+    cursor: pointer;
 }
+
+/* ... (color and file input styles) ... */
+
+/* ----------------------------------------------------- */
+/* MAIN CONTENT / DOTS / VIDEO STYLES */
+/* ----------------------------------------------------- */
 
 #main-content {
     flex-grow: 1;
     position: relative;
     overflow: hidden; 
-    transform: translateZ(0); /* For GPU stacking context */
+    transform: translateZ(0); 
 }
 
-/* Webcam feed element (will be toggled visible/invisible by JS) */
+/* Webcam feed element */
 #webcamFeed {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensures video fills the area without distortion */
-    transform: scaleX(-1); /* Flips the video horizontally (like a mirror) */
+    object-fit: cover; 
+    transform: scaleX(-1); 
     z-index: 10;
 }
 
@@ -144,7 +182,7 @@ body, html {
     border-radius: 50%;
     pointer-events: none; 
     transition: background-color 0.1s ease-out; 
-    z-index: 1000; /* Ensure dots are on top of everything */
+    z-index: 1000; 
 }
 
 #dot-connections-svg {
@@ -154,7 +192,7 @@ body, html {
     width: 100%;
     height: 100%;
     pointer-events: none; 
-    z-index: 999; /* Lines below dots */
+    z-index: 999; 
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
