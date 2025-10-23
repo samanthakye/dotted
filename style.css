@@ -1,15 +1,6 @@
 :root {
-    --bg-image: url('fall.JPG');
-    --bg-image: url('cat.JPG');
-    --bg-image: url('beach.jpeg');
-    --bg-image: url('houses.jpg');
-    --bg-image: url('kusama.JPG');
-    --bg-image: url('museum.jpeg');
-    --bg-image: url('park.JPG');
-    --bg-image: url('sashimi.JPG');
-    --bg-image: url('studio.JPG');
-    --bg-image: url('trees.JPG');
-    --bg-image: url('water.JPG');
+    /* Only define the default background once. JS handles the rotation. */
+    --bg-image: url('fall.JPG'); 
     --dot-color: #ffffff;
     --border-color: #a0a0a0;
     --text-color: #333;
@@ -79,6 +70,16 @@ body, html {
     color: var(--text-color);
 }
 
+/* This is a specific fix to ensure the checkbox and its label display correctly */
+/* It overrides the general 'display: flex' for the checkbox/label row */
+.setting-group label[for="slideshowToggle"] {
+    font-weight: normal; /* Don't bold the entire line */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px; /* Space between the checkbox and the text */
+}
+
 .setting-group input[type="range"] {
     width: 100%;
     height: 4px;
@@ -120,6 +121,7 @@ body, html {
     border-radius: 3px;
 }
 
+/* Styling the actual file input field (which may be hidden if you implemented the button label) */
 .setting-group input[type="file"] {
     background-color: #fff;
     border: 1px solid var(--border-color);
