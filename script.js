@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
     let isScattered = false; // Controls scatter/follow mode
+
+    let isConnectMode = false; // Tracks if the connection game is active
+    let connectedDots = [];    // Array to store the dots in the order they are connected
+    const connectTolerance = 40; // Max distance (px) for a successful click/connection
     
     // Custom Backgrounds Array (Ensure these filenames match your uploaded files exactly!)
     const backgroundImages = [
@@ -97,6 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         requestAnimationFrame(animateDots);
+
+        function getDistance(x1, y1, x2, y2) {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    return Math.sqrt(dx * dx + dy * dy);
+}
     }
     
     // --- 5. Background Image Functions ---
@@ -127,11 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }); 
 
-    // Double Click (Toggle Scatter/Follow State)
+// Double Click (Toggle Scatter/Connect State)
     mainContent.addEventListener('dblclick', () => {
         
-        if (!isScattered) {
-            // SCATTER LOGIC
+        if (!isScattered && !isConnectMode) {
+            // State 1: FOLLOW -> SCATTER/CONNECT
+            
+            // SCATTER LOGIC (Keep existing scatter code)
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
             const sidebarWidth = 280; 
@@ -139,8 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dots.forEach(dot => {
                 const minX = sidebarWidth;
                 const maxX = fullWidth; 
-                
-                // Random position across the entire window area (excluding sidebar)
                 const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
@@ -149,17 +159,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
             });
             
+            // Set new state
             isScattered = true;
-
-        } else {
-            // FOLLOW LOGIC
+            isConnectMode = true; // Enter the connection game mode
+            connectedDots = []; // Reset the connection tracker
             
+            // Add visual indication for Connect Mode (e.g., make dots glow)
             dots.forEach(dot => {
-                // Remove transition immediately so they snap back to following
-                dot.style.transition = 'none';
+                dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                dot.style.cursor = 'pointer'; // Indicate they are clickable
+                dot.onclick = handleDotClick; // Attach click handler
             });
-            
-            isScattered = false;
+
+        } else if (isConnectMode) {
+            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Reset)
+
+            resetConnectMode();
         }
     });
 
@@ -251,5 +266,76 @@ animateDots();
 
 // Initial call to start the slideshow if the checkbox is checked by default
 startSlideshow();
+
+function handleDotClick(e) {
+    e.stopPropagation(); // Prevent dblclick from triggering again
+
+    if (!isConnectMode) return;
+
+    const clickedDot = e.target;
+    const clickedIndex = dots.indexOf(clickedDot);
+
+    // 1. First Connection
+    if (connectedDots.length === 0) {
+        // Any dot can be the starting point
+        connectedDots.push(clickedDot);
+        clickedDot.style.opacity = 0.5; // Visual feedback: connected
+        
+    } 
+    // 2. Subsequent Connections
+    else {
+        const lastDot = connectedDots[connectedDots.length - 1];
+        
+        // Check if the current click is NOT the last connected dot (prevent double-click on the same dot)
+        if (clickedDot === lastDot) return; 
+
+        // Get coordinates of the last connected dot and the clicked dot
+        const lastX = parseFloat(lastDot.style.left) + currentDotSize / 2;
+        const lastY = parseFloat(lastDot.style.top) + currentDotSize / 2;
+        const currentX = parseFloat(clickedDot.style.left) + currentDotSize / 2;
+        const currentY = parseFloat(clickedDot.style.top) + currentDotSize / 2;
+        
+        // Check if the clicked dot is the *next in sequence* based on index
+        // To enforce sequential connection:
+        // const nextDotIndex = dots.indexOf(lastDot) + 1;
+        // if (nextDotIndex === clickedIndex) { ... }
+        
+        // --- RELAXED CONNECTION LOGIC (Allows clicking any UNCONNECTED dot) ---
+        if (!connectedDots.includes(clickedDot)) {
+            connectedDots.push(clickedDot);
+            clickedDot.style.opacity = 0.5; // Visual feedback: connected
+            
+            // ************ VISUAL LINE DRAWING (Basic Implementation) ************
+            // You would need a library or SVG/Canvas to draw persistent lines.
+            // For now, we'll just update the dots' appearance.
+        }
+    }
+    
+    // 3. Check for Completion
+    if (connectedDots.length === dots.length) {
+        // ALL dots are connected! Reset to follow mode.
+        resetConnectMode(true);
+    }
+}
+
+function resetConnectMode(success = false) {
+    // 1. Clean up dot visuals
+    dots.forEach(dot => {
+        dot.style.boxShadow = 'none'; // Remove glow
+        dot.style.cursor = 'default';
+        dot.style.opacity = 1;       // Restore opacity
+        dot.onclick = null;          // Remove click handler
+    });
+    
+    // 2. Clear state
+    isScattered = false;
+    isConnectMode = false;
+    connectedDots = [];
+    
+    // 3. Optional: Add a success message
+    if (success) {
+        console.log("Success! All dots connected. Reverting to Follow Mode.");
+    }
+}
 
 }); // <-- CLOSES the DOMContentLoaded listener
