@@ -22,14 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value);
     
-    let isScattered = false;      // Controls scatter/follow mode (also controls floating)
+    let isScattered = false;      // Controls scatter/follow mode (and floating)
     let isConnectMode = false;    // Tracks if the connection game is active
     let connectedDots = [];       // Array to store the dots in the order they are connected
-    const connectTolerance = 40;  // Max distance (px) for a successful click/connection
     
-    const floatIntensity = 0.005; // Intensity for scattered dot floating motion
-    const maxFloatDistance = 5;   // Max distance (px) for dot drift
+    // Floating Dot Variables
+    const floatIntensity = 0.005; 
+    const maxFloatDistance = 5;   
     
+    // Background Variables
     const backgroundImages = [
         'fall.jpg', 'cat.jpg', 'beach.jpeg', 'houses.jpg', 
         'kusama.jpg', 'museum.jpeg', 'park.jpg', 'sashimi.jpg', 
@@ -103,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const floatX = Math.sin(time + index) * maxFloatDistance;
                 const floatY = Math.cos(time + index) * maxFloatDistance;
                 
+                // Apply the floating nudge
                 dot.style.left = `${currentX + floatX * 0.01}px`; 
                 dot.style.top = `${currentY + floatY * 0.01}px`;
             });
@@ -143,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. Connect-The-Dots Logic ---
     
     function isDotEligible(dot) {
-        // Simple logic: any unconnected dot is connectable
         return !connectedDots.includes(dot); 
     }
 
@@ -155,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const clickedDot = e.currentTarget; 
         
         if (connectedDots.includes(clickedDot)) {
-            return; // Ignore clicks on already connected dots
+            return; 
         }
 
         if (connectedDots.length === 0 || isDotEligible(clickedDot)) {
@@ -164,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Visual Feedback
             clickedDot.style.opacity = 0.5; 
-            clickedDot.style.backgroundColor = '#FF6347'; // Highlight color: Tomato 
+            clickedDot.style.backgroundColor = '#FF6347'; 
 
             // Check for Completion
             if (connectedDots.length === dots.length) {
@@ -175,11 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetConnectMode(success = false) {
         dots.forEach(dot => {
+            // Reset transforms and visuals
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
             dot.style.opacity = 1;       
-            dot.style.backgroundColor = currentDotColor; // Restore color
+            dot.style.backgroundColor = currentDotColor; 
             dot.removeEventListener('click', handleDotClick); 
+            
+            // REMOVE GPU acceleration property
+            dot.style.transform = 'none'; 
         });
         
         isScattered = false;
@@ -187,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         connectedDots = [];
         
         if (success) {
-            // Re-apply follow behavior immediately
             console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
         }
     }
@@ -224,9 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
-                dot.style.transition = 'none'; // Ensure floating can start immediately
+                dot.style.transition = 'none';
                 dot.style.left = `${randomX - currentDotSize / 2}px`;
                 dot.style.top = `${randomY - currentDotSize / 2}px`;
+
+                // ADDED FIX: Force GPU acceleration for sharp floating dots
+                dot.style.transform = 'translateZ(0)';
             });
             
             // Set new state
@@ -316,6 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
     preloadImages(backgroundImages);
     initializeDots(currentNumDots);
     animateDots();
-    startSlideshow(); // Starts rotation if the checkbox is checked by default
+    startSlideshow(); 
 
 });
