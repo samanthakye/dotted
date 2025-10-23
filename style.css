@@ -1,10 +1,8 @@
 :root {
-    /* Only define the default background once. JS handles the rotation. */
-    --bg-image: url('fall.JPG'); 
     --dot-color: #ffffff;
-    --border-color: #a0a0a0;
-    --text-color: #333;
-    --sidebar-bg: #e0e0e0;
+    --border-color: #555555; /* Darkened border for contrast */
+    --text-color: #ffffff; /* Text color changed to White */
+    --sidebar-bg: #111111; /* Sidebar background changed to Dark/Black */
     --main-bg: #f0f0f0;
     --dot-size: 25px;
 }
@@ -39,7 +37,7 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    font-size: 14px;
+    font-size: 18px;
     color: var(--text-color);
     overflow-y: auto; /* Allow scrolling if settings get too long */
 }
