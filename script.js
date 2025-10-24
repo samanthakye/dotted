@@ -409,11 +409,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-// FIX: Attach the Capture Button listener here, after the element is selected and ready.
-const captureButton = document.getElementById('captureButton'); 
+// --- 8. Sidebar Control Listeners ---
+// ... (existing listeners for dotsize, color, etc.) ...
+
+// CAPTURE SCREEN LISTENER (FINAL FIX)
+const captureButton = document.getElementById('snapshot-btn'); // Use the correct, unique ID
+
 if (captureButton) {
     captureButton.addEventListener('click', () => {
-        // Hide the sidebar temporarily to take a clean screenshot of the main canvas
+        // Check if html2canvas is loaded before proceeding
+        if (typeof html2canvas === 'undefined') {
+            console.error("html2canvas library is not loaded. Check the <script> tag in your index.html.");
+            alert("Capture failed: Library not loaded.");
+            return;
+        }
+
         const sidebar = document.getElementById('sidebar');
         const captureWidth = window.innerWidth;
         const captureHeight = window.innerHeight;
@@ -422,20 +432,17 @@ if (captureButton) {
         sidebar.style.display = 'none'; 
 
         // Use html2canvas to capture the entire visible area (body)
-        // NOTE: html2canvas library must be loaded via a <script> tag in index.html
         html2canvas(document.body, { 
             width: captureWidth,
             height: captureHeight,
-            scale: 2, // Use scale 2 for a high-resolution (2x) image
+            scale: 2, // High resolution
             logging: false
         }).then(canvas => {
-            // Create a link to download the image
             const image = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.href = image;
             link.download = 'dotted_capture.png';
             
-            // Append to body, click it, and remove it immediately
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -445,7 +452,6 @@ if (captureButton) {
         });
     });
 }
-
 
     // --- 9. Initialization (Runs Once) ---
 
