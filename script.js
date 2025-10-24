@@ -109,14 +109,89 @@ document.addEventListener('DOMContentLoaded', () => {
             const keypoints = predictions[0].landmarks;
             const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
-            if (dots[0]) {
-                // Invert the X-coordinate for mirrored movement
-                const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
-                dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
-                dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
+            if (isOpenHand(keypoints)) {
+                if (!isScattered) {
+                    isScattered = true;
+                    // Trigger scattering animation
+                    const fullWidth = window.innerWidth;
+                    const fullHeight = window.innerHeight;
+
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                        const randomX = Math.random() * fullWidth;
+                        const randomY = Math.random() * fullHeight;
+                        dot.style.left = `${randomX - currentDotSize / 2}px`;
+                        dot.style.top = `${randomY - currentDotSize / 2}px`;
+                        dot.style.transform = 'translateZ(0)';
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+            } else {
+                if (isScattered) {
+                    isScattered = false;
+                    // Revert to following behavior (or stop scattering)
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+                // Only follow finger if not scattered
+                if (dots[0]) {
+                    // Invert the X-coordinate for mirrored movement
+                    const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
+                    dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
+                    dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
+                }
             }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
+    }
+
+    function isOpenHand(keypoints) {
+        // Keypoints for finger tips and palm base
+        const thumbTip = keypoints[4];
+        const indexTip = keypoints[8];
+        const middleTip = keypoints[12];
+        const ringTip = keypoints[16];
+        const pinkyTip = keypoints[20];
+        const palmBase = keypoints[0];
+
+        // Calculate distances from palm base to finger tips
+        const dist = (p1, p2) => Math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2);
+
+        const thumbDist = dist(palmBase, thumbTip);
+        const indexDist = dist(palmBase, indexTip);
+        const middleDist = dist(palmBase, middleTip);
+        const ringDist = dist(palmBase, ringTip);
+        const pinkyDist = dist(palmBase, pinkyTip);
+
+        // Define thresholds for an "open" hand. These values might need adjustment.
+        const openThreshold = 100; // Example value, depends on camera distance and hand size
+
+        // Check if all fingers are extended (distance from palm is large enough)
+        const allFingersExtended = 
+            thumbDist > openThreshold &&
+            indexDist > openThreshold &&
+            middleDist > openThreshold &&
+            ringDist > openThreshold &&
+            pinkyDist > openThreshold;
+
+        // Additionally, check angles or relative positions to ensure they are spread out
+        // This is a simplified check, more robust detection would involve angles between fingers
+        const fingersSpread = 
+            indexTip[0] < middleTip[0] && // Index left of middle
+            middleTip[0] < ringTip[0] &&  // Middle left of ring
+            ringTip[0] < pinkyTip[0];     // Ring left of pinky
+
+        return allFingersExtended && fingersSpread;
     }
 
 
