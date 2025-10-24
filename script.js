@@ -401,6 +401,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    cameraToggleButton.addEventListener('click', async () => {
+        isCameraMode = !isCameraMode;
+        if (isCameraMode) {
+            webcamFeed.style.display = 'block';
+            handCanvas.style.display = 'block';
+            mainContent.removeEventListener('mousemove', mouseMoveHandler);
+            cancelAnimationFrame(handAnimationRequest);
+            await setupCamera();
+            animateHand();
+        } else {
+            webcamFeed.style.display = 'none';
+            handCanvas.style.display = 'none';
+            mainContent.addEventListener('mousemove', mouseMoveHandler);
+            cancelAnimationFrame(handAnimationRequest);
+            if (webcamFeed.srcObject) {
+                webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+            }
+            animateDots();
+        }
+    });
+
     // --- 8. Sidebar Control Listeners ---
     
     dotSizeInput.addEventListener('input', (e) => {
@@ -510,9 +531,12 @@ if (captureButton) {
 
     // --- 9. Initialization (Runs Once) ---
 
-    preloadImages(backgroundImages);
-    initializeDots(currentNumDots);
-    animateDots();
-    startSlideshow(); 
+    handpose.load().then(loadedModel => {
+        model = loadedModel;
+        preloadImages(backgroundImages);
+        initializeDots(currentNumDots);
+        animateDots();
+        startSlideshow(); 
+    });
 
 });
