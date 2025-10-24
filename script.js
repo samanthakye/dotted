@@ -94,8 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 webcamFeed.height = webcamFeed.videoHeight;
                 handCanvas.width = webcamFeed.videoWidth;
                 handCanvas.height = webcamFeed.videoHeight;
-                handCtx.translate(webcamFeed.videoWidth, 0); // Translate for mirroring
-                handCtx.scale(-1, 1); // Mirror the canvas context
                 resolve(webcamFeed);
             };
         });
@@ -112,8 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
             if (dots[0]) {
-                dots[0].style.left = `${pointerFingerTip[0]}px`;
-                dots[0].style.top = `${pointerFingerTip[1]}px`;
+                // Invert the X-coordinate for mirrored movement
+                const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
+                dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
+                dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
             }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
