@@ -283,22 +283,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Double Click (Toggle Scatter/Connect State)
     mainContent.addEventListener('dblclick', (e) => {
-        if (e.target.classList.contains('dot')) {
-            return; 
-        }
+        // ... (pre-check code) ...
         
         if (!isScattered && !isConnectMode) {
             // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
-            const sidebarWidth = 280; 
+            // Removed: const sidebarWidth = 280; 
 
             dots.forEach(dot => {
                 dot.style.transition = scatterTransition; 
 
-                const minX = sidebarWidth;
+                // FIX: Set scatter range from 0 to fullWidth
+                const minX = 0; 
                 const maxX = fullWidth; 
+                
                 const randomX = Math.random() * (maxX - minX) + minX; 
                 const randomY = Math.random() * fullHeight;
 
