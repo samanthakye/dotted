@@ -21,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let model = null;
     let isCameraMode = false;
     let handAnimationRequest = null;
+    const cameraToggleButton = document.getElementById('cameraToggleButton');
+    const webcamFeed = document.getElementById('webcamFeed');
+    const handCanvas = document.getElementById('handCanvas');
+    const handCtx = handCanvas.getContext('2d');
+
+    let model = null;
+    let isCameraMode = false;
+    let handAnimationRequest = null;
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -79,6 +87,53 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.style.backgroundColor = currentDotColor;
         });
     }
+
+    async function setupCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Webcam API not available');
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        webcamFeed.srcObject = stream;
+
+        return new Promise((resolve) => {
+            webcamFeed.onloadedmetadata = () => {
+                webcamFeed.width = webcamFeed.videoWidth;
+                webcamFeed.height = webcamFeed.videoHeight;
+                handCanvas.width = webcamFeed.videoWidth;
+                handCanvas.height = webcamFeed.videoHeight;
+                resolve(webcamFeed);
+            };
+        });
+    }
+
+    async function animateHand() {
+        if (!isCameraMode || !model) return;
+
+        const predictions = await model.estimateHands(webcamFeed);
+        handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+
+        if (predictions.length > 0) {
+            const keypoints = predictions[0].landmarks;
+            const fingerTips = [
+                keypoints[4], // Thumb
+                keypoints[8], // Index Finger
+                keypoints[12], // Middle Finger
+                keypoints[16], // Ring Finger
+                keypoints[20], // Pinky
+            ];
+
+            fingerTips.forEach((tip, i) => {
+                const [x, y] = tip;
+                if (dots[i]) {
+                    dots[i].style.left = `${x}px`;
+                    dots[i].style.top = `${y}px`;
+                }
+            });
+        }
+        handAnimationRequest = requestAnimationFrame(animateHand);
+    }
+
 
     async function setupCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -401,27 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    cameraToggleButton.addEventListener('click', async () => {
-        isCameraMode = !isCameraMode;
-        if (isCameraMode) {
-            webcamFeed.style.display = 'block';
-            handCanvas.style.display = 'block';
-            mainContent.removeEventListener('mousemove', mouseMoveHandler);
-            cancelAnimationFrame(handAnimationRequest);
-            await setupCamera();
-            animateHand();
-        } else {
-            webcamFeed.style.display = 'none';
-            handCanvas.style.display = 'none';
-            mainContent.addEventListener('mousemove', mouseMoveHandler);
-            cancelAnimationFrame(handAnimationRequest);
-            if (webcamFeed.srcObject) {
-                webcamFeed.srcObject.getTracks().forEach(track => track.stop());
-            }
-            animateDots();
-        }
-    });
-
     // --- 8. Sidebar Control Listeners ---
     
     dotSizeInput.addEventListener('input', (e) => {
@@ -531,12 +565,9 @@ if (captureButton) {
 
     // --- 9. Initialization (Runs Once) ---
 
-    handpose.load().then(loadedModel => {
-        model = loadedModel;
-        preloadImages(backgroundImages);
-        initializeDots(currentNumDots);
-        animateDots();
-        startSlideshow(); 
-    });
+    preloadImages(backgroundImages);
+    initializeDots(currentNumDots);
+    animateDots();
+    startSlideshow(); 
 
 });
