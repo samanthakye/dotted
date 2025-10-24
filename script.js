@@ -94,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 webcamFeed.height = webcamFeed.videoHeight;
                 handCanvas.width = webcamFeed.videoWidth;
                 handCanvas.height = webcamFeed.videoHeight;
+                handCtx.translate(webcamFeed.videoWidth, 0); // Translate for mirroring
+                handCtx.scale(-1, 1); // Mirror the canvas context
                 resolve(webcamFeed);
             };
         });
@@ -107,21 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (predictions.length > 0) {
             const keypoints = predictions[0].landmarks;
-            const fingerTips = [
-                keypoints[4], // Thumb
-                keypoints[8], // Index Finger
-                keypoints[12], // Middle Finger
-                keypoints[16], // Ring Finger
-                keypoints[20], // Pinky
-            ];
+            const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
-            fingerTips.forEach((tip, i) => {
-                const [x, y] = tip;
-                if (dots[i]) {
-                    dots[i].style.left = `${x}px`;
-                    dots[i].style.top = `${y}px`;
-                }
-            });
+            if (dots[0]) {
+                dots[0].style.left = `${pointerFingerTip[0]}px`;
+                dots[0].style.top = `${pointerFingerTip[1]}px`;
+            }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
     }
@@ -328,16 +321,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. Event Handlers ---
     
-    mainContent.addEventListener('mousemove', (e) => {
+    const mouseMoveHandler = (e) => {
         if (!isScattered) {
             const rect = mainContent.getBoundingClientRect();
             mouseX = e.clientX - rect.left - currentDotSize / 2; 
             mouseY = e.clientY - rect.top - currentDotSize / 2;  
         }
-    }); 
+    };
+
+    mainContent.addEventListener('mousemove', mouseMoveHandler);
 
     // Double Click (Toggle Scatter/Connect State)
-    mainContent.addEventListener('dblclick', (e) => {
+    mainContent.addEventListener('mousemove', mouseMoveHandler); 
+
+    // Double Click (Toggle Scatter/Connect State)
+    const dblClickHandler = (e) => {
         // ... (pre-check code) ...
         
         if (!isScattered && !isConnectMode) {
@@ -399,7 +397,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }, 500);
         }
-    });
+    };
+    mainContent.addEventListener('dblclick', dblClickHandler);
 
     cameraToggleButton.addEventListener('click', async () => {
         isCameraMode = !isCameraMode;
@@ -407,14 +406,18 @@ document.addEventListener('DOMContentLoaded', () => {
             webcamFeed.style.display = 'block';
             handCanvas.style.display = 'block';
             document.getElementById('container').style.backgroundImage = 'none';
+            mainContent.removeEventListener('mousemove', mouseMoveHandler);
+            mainContent.removeEventListener('dblclick', dblClickHandler);
             cancelAnimationFrame(handAnimationRequest);
             await setupCamera();
             animateHand();
         } else {
             webcamFeed.style.display = 'none';
             handCanvas.style.display = 'none';
+            handCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset canvas transformation
             document.getElementById('container').style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
             mainContent.addEventListener('mousemove', mouseMoveHandler);
+            mainContent.addEventListener('dblclick', dblClickHandler);
             cancelAnimationFrame(handAnimationRequest);
             if (webcamFeed.srcObject) {
                 webcamFeed.srcObject.getTracks().forEach(track => track.stop());
