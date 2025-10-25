@@ -169,26 +169,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (predictions.length > 0) {
             const keypoints = predictions[0].landmarks;
-            const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
-            let targetX = webcamFeed.videoWidth - pointerFingerTip[0];
-            let targetY = pointerFingerTip[1];
+            if (isOpenHand(keypoints)) {
+                if (!isScattered) {
+                    isScattered = true;
+                    const fullWidth = window.innerWidth;
+                    const fullHeight = window.innerHeight;
 
-            dots.forEach((dot, index) => {
-                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                        const randomX = Math.random() * fullWidth;
+                        const randomY = Math.random() * fullHeight;
+                        dot.style.left = `${randomX - currentDotSize / 2}px`;
+                        dot.style.top = `${randomY - currentDotSize / 2}px`;
+                        dot.style.transform = 'translateZ(0)';
+                    });
 
-                const dx = targetX - currentX;
-                const dy = targetY - currentY;
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+            } else {
+                if (isScattered) {
+                    isScattered = false;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+                let targetX = webcamFeed.videoWidth - keypoints[8][0];
+                let targetY = keypoints[8][1];
 
-                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+                dots.forEach((dot, index) => {
+                    const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
 
-                targetX = parseFloat(dot.style.left) + currentDotSize / 2;
-                targetY = parseFloat(dot.style.top) + currentDotSize / 2;
-            });
+                    const dx = targetX - currentX;
+                    const dy = targetY - currentY;
+
+                    dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                    dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                    targetX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dot.style.top) + currentDotSize / 2;
+                });
+            }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
+    }
+
+    function isOpenHand(keypoints) {
+        const thumbTip = keypoints[4];
+        const indexTip = keypoints[8];
+        const middleTip = keypoints[12];
+        const ringTip = keypoints[16];
+        const pinkyTip = keypoints[20];
+        const palmBase = keypoints[0];
+
+        const dist = (p1, p2) => Math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2);
+
+        const thumbDist = dist(palmBase, thumbTip);
+        const indexDist = dist(palmBase, indexTip);
+        const middleDist = dist(palmBase, middleTip);
+        const ringDist = dist(palmBase, ringTip);
+        const pinkyDist = dist(palmBase, pinkyTip);
+
+        const openThreshold = 100;
+
+        return (
+            thumbDist > openThreshold &&
+            indexDist > openThreshold &&
+            middleDist > openThreshold &&
+            ringDist > openThreshold &&
+            pinkyDist > openThreshold
+        );
     }
 
     function changeBackground(image) {
