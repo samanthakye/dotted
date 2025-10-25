@@ -203,8 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }, 500);
                 }
-                let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 2;
-                let targetY = keypoints[8][1] * 2;
+                let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
+                let targetY = keypoints[8][1] * 3;
 
                 dots.forEach((dot, index) => {
                     const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
@@ -414,6 +414,7 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             mainContent.removeEventListener('dblclick', dblClickHandler);
             stopSlideshow();
             resetConnectMode(false);
+            currentFollowSpeed = 0.5;
             await setupCamera();
             animateHand();
         } else {
@@ -429,6 +430,7 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             if (webcamFeed.srcObject) {
                 webcamFeed.srcObject.getTracks().forEach(track => track.stop());
             }
+            currentFollowSpeed = parseFloat(followSpeedInput.value);
             animateDots();
         }
     });
