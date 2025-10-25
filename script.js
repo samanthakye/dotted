@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
-    // Renamed selector:
     const snapshotButton = document.getElementById('snapshot-btn'); 
     const cameraToggleButton = document.getElementById('cameraToggleButton');
     const webcamFeed = document.getElementById('webcamFeed');
@@ -291,151 +290,133 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Connect-The-Dots Logic ---
     
-            function drawConnectionLines() {
-                const svgElement = document.getElementById('dot-connections-svg');
-                if (!svgElement) {
-                    console.log('SVG element not found');
-                    return;
-                }
-        
-                svgElement.innerHTML = ''; 
-                console.log('drawConnectionLines called, SVG cleared. Current dotConnections:', dotConnections);
-        
-                const linesDrawn = new Set(); 
-        
-                dots.forEach((dot, index) => {
-                    const connectedArray = dotConnections[index] || [];
-                    
-                    connectedArray.forEach(connectedIndex => {
-                        const partnerDot = dots[connectedIndex];
-                        
-                        const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
-        
-                        if (!linesDrawn.has(key)) {
-                            console.log('Attempting to draw line between dot', index, 'and dot', connectedIndex);
-                            
-                            const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
-                            const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
-                            const x2 = parseFloat(partnerDot.style.left) + currentDotSize / 2;
-                            const y2 = parseFloat(partnerDot.style.top) + currentDotSize / 2;
-        
-                            console.log(`Line coordinates: (${x1}, ${y1}) to (${x2}, ${y2})`);
-        
-                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                            line.setAttribute('x1', x1);
-                            line.setAttribute('y1', y1);
-                            line.setAttribute('x2', x2);
-                            line.setAttribute('y2', y2);
-                            
-                                                                                        line.setAttribute('stroke', currentLineColor); 
-                            
-                                                                                        
-                            
-                                                                                        line.setAttribute('stroke-width', currentLineThickness);
-                            
-                                                                                        line.setAttribute('stroke-linecap', 'round');                            line.setAttribute('stroke-dasharray', '5, 5'); 
-        
-                            svgElement.appendChild(line);
-                            linesDrawn.add(key);
-                            console.log('Line element created:', line);
-                        }
-                    });
-                });
-            }
-        
-            function checkConnectionCompletion() {
-                let allConnected = true;
-                for (let i = 0; i < dots.length; i++) {
-                    if (!dotConnections[i] || dotConnections[i].length === 0) {
-                        allConnected = false;
-                        break;
-                    }
-                }
-        
-                if (allConnected) {
-                    console.log("All dots connected!");
-                    resetConnectMode(true);
-                }
-            }
-        
-            function isDotEligible(dot) {
-                return true; 
-            }
-        
-            function handleDotClick(e) {
-                e.stopPropagation(); 
-                console.log('Dot clicked', e.currentTarget);
-                if (!isConnectMode) {
-                    console.log('Not in connect mode, ignoring dot click');
-                    return;
-                }
-        
-                const clickedDot = e.currentTarget; 
-                const clickedIndex = dots.indexOf(clickedDot);
-                console.log('Clicked dot index:', clickedIndex);
-                
-                if (activeConnection === null) {
-                    console.log('First dot clicked for connection. Storing:', { dot: clickedDot, index: clickedIndex });
-                    activeConnection = { dot: clickedDot, index: clickedIndex };
-                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
-                } else {
-                    console.log('Second dot clicked for connection.');
-                    const firstDot = activeConnection.dot;
-                    const firstIndex = activeConnection.index;
-                                        
-                    if (clickedDot === firstDot) {
-                        console.log('Clicked same dot, deselecting');
-                        firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                        activeConnection = null;
-                        return;
-                    }
-                                        
-                    console.log('dotConnections before update:', dotConnections);
-                    dotConnections[firstIndex] = dotConnections[firstIndex] || [];
-                    dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
-                                        
-                    if (!dotConnections[firstIndex].includes(clickedIndex)) {
-                        dotConnections[firstIndex].push(clickedIndex);
-                        dotConnections[clickedIndex].push(firstIndex);
-                        console.log('Connection made between', firstIndex, 'and', clickedIndex, '. Updated dotConnections:', dotConnections);
-                    }
-                                        
-                    drawConnectionLines();
-                                        
-                    // The clicked dot becomes the new active connection
-                    firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
-                    activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
-                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
-                                        
-                    checkConnectionCompletion();
-                }
-            }
-                dots.forEach(dot => {
-                    dot.style.boxShadow = 'none'; 
-                    dot.style.cursor = 'default';
-                    dot.style.opacity = 1;       
-                    dot.style.backgroundColor = currentDotColor; 
-                    
-                    dot.removeEventListener('click', handleDotClick); 
-                    
-                    dot.style.transform = 'none'; // Remove GPU acceleration
-                });
-                
-                isScattered = false;
-                isConnectMode = false;
-                
-                activeConnection = null; 
-                dotConnections = {};
-                
-                const svgElement = document.getElementById('dot-connections-svg');
-                if (svgElement) {
-                    svgElement.innerHTML = ''; 
-                }
+    function drawConnectionLines() {
+        const svgElement = document.getElementById('dot-connections-svg');
+        if (!svgElement) {
+            console.log('SVG element not found');
+            return;
+        }
 
-                if (success) {
-                    console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
+        svgElement.innerHTML = ''; 
+        const linesDrawn = new Set(); 
+
+        dots.forEach((dot, index) => {
+            const connectedArray = dotConnections[index] || [];
+            
+            connectedArray.forEach(connectedIndex => {
+                const partnerDot = dots[connectedIndex];
+                
+                const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
+
+                if (!linesDrawn.has(key)) {
+                    const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
+                    const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
+                    const x2 = parseFloat(partnerDot.style.left) + currentDotSize / 2;
+                    const y2 = parseFloat(partnerDot.style.top) + currentDotSize / 2;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', currentLineColor); 
+                    line.setAttribute('stroke-width', currentLineThickness);
+                    line.setAttribute('stroke-linecap', 'round');                            
+                    line.setAttribute('stroke-dasharray', '5, 5'); 
+
+                    svgElement.appendChild(line);
+                    linesDrawn.add(key);
                 }
+            });
+        });
+    }
+
+    function checkConnectionCompletion() {
+        let allConnected = true;
+        for (let i = 0; i < dots.length; i++) {
+            if (!dotConnections[i] || dotConnections[i].length === 0) {
+                allConnected = false;
+                break;
             }
+        }
+
+        if (allConnected) {
+            resetConnectMode(true);
+        }
+    }
+
+    function isDotEligible(dot) {
+        return true; 
+    }
+
+    function handleDotClick(e) {
+        e.stopPropagation(); 
+        if (!isConnectMode) {
+            return;
+        }
+
+        const clickedDot = e.currentTarget; 
+        const clickedIndex = dots.indexOf(clickedDot);
+        
+        if (activeConnection === null) {
+            activeConnection = { dot: clickedDot, index: clickedIndex };
+            clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
+        } else {
+            const firstDot = activeConnection.dot;
+            const firstIndex = activeConnection.index;
+
+            if (clickedDot === firstDot) {
+                firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                activeConnection = null;
+                return;
+            }
+
+            dotConnections[firstIndex] = dotConnections[firstIndex] || [];
+            dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
+
+            if (!dotConnections[firstIndex].includes(clickedIndex)) {
+                dotConnections[firstIndex].push(clickedIndex);
+                dotConnections[clickedIndex].push(firstIndex);
+            }
+            
+            drawConnectionLines();
+            
+            // The clicked dot becomes the new active connection
+            firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
+            activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
+            clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
+
+            checkConnectionCompletion();
+        }
+    }
+
+    function resetConnectMode(success = false) {
+        dots.forEach(dot => {
+            dot.style.boxShadow = 'none'; 
+            dot.style.cursor = 'default';
+            dot.style.opacity = 1;       
+            dot.style.backgroundColor = currentDotColor; 
+            
+            dot.removeEventListener('click', handleDotClick); 
+            
+            dot.style.transform = 'none'; // Remove GPU acceleration
+        });
+        
+        isScattered = false;
+        isConnectMode = false;
+        
+        activeConnection = null; 
+        dotConnections = {};
+        
+        const svgElement = document.getElementById('dot-connections-svg');
+        if (svgElement) {
+            svgElement.innerHTML = ''; 
+        }
+
+        if (success) {
+            console.log("SUCCESS! All dots connected. Reverting to Follow Mode.");
+        }
+    }
 
     // --- 7. Event Handlers ---
     
@@ -451,14 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Double Click (Toggle Scatter/Connect State)
     const dblClickHandler = (e) => {
-        console.log('Double clicked');
         if (isCameraMode) {
-            console.log('In camera mode, dblclick ignored');
             return; // Prevent dblclick from interfering in camera mode
         }
 
         if (!isScattered && !isConnectMode) {
-            console.log('Entering connect mode');
             // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
             const fullWidth = window.innerWidth;
@@ -491,7 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
                 dot.addEventListener('click', handleDotClick); 
-                console.log('Added click listener to dot', dot);
             });
 
             // REMOVE transition after it completes (0.5s)
@@ -502,7 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
 
         } else if (isConnectMode) {
-            console.log('Exiting connect mode');
             dots.forEach(dot => {
                 dot.style.transition = scatterTransition;
             });
@@ -521,9 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContent.addEventListener('dblclick', dblClickHandler);
 
     cameraToggleButton.addEventListener('click', async () => {
-        console.log('Camera toggle button clicked.');
         isCameraMode = !isCameraMode;
-        console.log('isCameraMode now:', isCameraMode);
         if (isCameraMode) {
             webcamFeed.style.display = 'block';
             handCanvas.style.display = 'block';
