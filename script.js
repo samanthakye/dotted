@@ -91,12 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function setupCamera() {
+        console.log('setupCamera called.');
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('Webcam API not available');
             throw new Error('Webcam API not available');
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         webcamFeed.srcObject = stream;
+        console.log('Webcam stream set.');
 
         return new Promise((resolve) => {
             webcamFeed.onloadedmetadata = () => {
@@ -104,12 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 webcamFeed.height = webcamFeed.videoHeight;
                 handCanvas.width = webcamFeed.videoWidth;
                 handCanvas.height = webcamFeed.videoHeight;
+                console.log('Webcam metadata loaded, canvas sized.');
                 resolve(webcamFeed);
             };
         });
     }
 
     async function animateHand() {
+        console.log('animateHand running...');
         if (!isCameraMode || !model || isConnectMode) return;
 
         const predictions = await model.estimateHands(webcamFeed);
@@ -207,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. Animation Loop ---
     function animateDots() {
+        console.log('animateDots running...');
         if (isConnectMode) {
             requestAnimationFrame(animateDots);
             return;
@@ -516,7 +522,9 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContent.addEventListener('dblclick', dblClickHandler);
 
     cameraToggleButton.addEventListener('click', async () => {
+        console.log('Camera toggle button clicked.');
         isCameraMode = !isCameraMode;
+        console.log('isCameraMode now:', isCameraMode);
         if (isCameraMode) {
             webcamFeed.style.display = 'block';
             handCanvas.style.display = 'block';
@@ -667,6 +675,7 @@ if (captureButton) {
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
+        console.log('Handpose model loaded successfully.');
         preloadImages(backgroundImages);
         initializeDots(currentNumDots);
         animateDots();
