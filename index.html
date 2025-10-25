@@ -45,6 +45,12 @@
                 <input type="color" id="lineColor" value="#ffffff">
             </div>
             <div class="setting-group">
+                <label for="backgroundMusicToggle">
+                    <input type="checkbox" id="backgroundMusicToggle" checked>
+                    Enable Background Music
+                </label>
+            </div>
+            <div class="setting-group">
                 <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
             </div>
             
@@ -94,5 +100,9 @@
     
     <script src="script.js"></script>
     
+    <audio id="backgroundMusic" loop autoplay>
+        <source src="relaxing_music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 </body>
 </html>

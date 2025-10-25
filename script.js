@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    const backgroundMusicToggle = document.getElementById('backgroundMusicToggle');
     // Renamed selector:
     const snapshotButton = document.getElementById('snapshot-btn'); 
     const cameraToggleButton = document.getElementById('cameraToggleButton');
@@ -610,6 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
             startSlideshow();
         } else {
             stopSlideshow();
+        }
+    });
+
+    backgroundMusicToggle.addEventListener('change', () => {
+        if (backgroundMusicToggle.checked) {
+            backgroundMusic.play();
+        } else {
+            backgroundMusic.pause();
         }
     });
 
