@@ -123,17 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCameraMode) return;
 
         if (!isScattered) { 
+            let targetX = mouseX;
+            let targetY = mouseY;
+
             dots.forEach((dot, index) => {
-                let targetX, targetY;
-
-                if (index === 0) {
-                    targetX = mouseX;
-                    targetY = mouseY;
-                } else {
-                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
-                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
-                }
-
                 const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
                 const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
 
@@ -142,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
                 dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                targetX = parseFloat(dot.style.left) + currentDotSize / 2;
+                targetY = parseFloat(dot.style.top) + currentDotSize / 2;
             });
         } else {
             const time = Date.now() * floatIntensity;
@@ -191,11 +187,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const keypoints = predictions[0].landmarks;
             const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
-            if (dots[0]) {
-                const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
-                dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
-                dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
-            }
+            let targetX = webcamFeed.videoWidth - pointerFingerTip[0];
+            let targetY = pointerFingerTip[1];
+
+            dots.forEach((dot, index) => {
+                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                const dx = targetX - currentX;
+                const dy = targetY - currentY;
+
+                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                targetX = parseFloat(dot.style.left) + currentDotSize / 2;
+                targetY = parseFloat(dot.style.top) + currentDotSize / 2;
+            });
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
     }
