@@ -25,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCameraMode = false;
     let handAnimationRequest = null;
     let dotAnimationFrameRequest = null;
-    const clickSound = document.getElementById('clickSound');
-    const connectSound = document.getElementById('connectSound');
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
