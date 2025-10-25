@@ -203,17 +203,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. Animation Loop ---
     function animateDots() {
-        if (isConnectMode || isCameraMode) {
+        if (isConnectMode) {
             requestAnimationFrame(animateDots);
             return;
         }
         
         if (!isScattered) { 
             dots.forEach((dot, index) => {
-                let targetX = mouseX;
-                let targetY = mouseY;
+                let targetX, targetY;
 
-                if (index > 0) {
+                if (index === 0) {
+                    // First dot follows mouse or finger (via mouseX, mouseY)
+                    targetX = mouseX;
+                    targetY = mouseY;
+                } else {
+                    // Subsequent dots follow the previous dot
                     targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
                     targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
                 }
