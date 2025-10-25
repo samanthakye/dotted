@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Double Click (Toggle Scatter/Connect State)
     const dblClickHandler = (e) => {
+        console.log('dblClickHandler triggered. isConnectMode:', isConnectMode);
         if (!isScattered && !isConnectMode) {
             // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
@@ -253,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set new state
             isScattered = true;
             isConnectMode = true; 
+            console.log('isConnectMode set to', isConnectMode);
             cancelAnimationFrame(dotAnimationFrameRequest); // Stop normal dot animation
             
             activeConnection = null;
@@ -261,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dots.forEach(dot => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
-                dot.addEventListener('click', handleDotClick); 
             });
 
             // REMOVE transition after it completes (0.5s)
