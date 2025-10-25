@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. Animation Loop ---
     function animateDots() {
         console.log('animateDots running...');
-        if (isConnectMode) {
+        if (isConnectMode || isCameraMode) {
             requestAnimationFrame(animateDots);
             return;
         }
@@ -519,7 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     mainContent.addEventListener('dblclick', dblClickHandler);
-    mainContent.addEventListener('dblclick', dblClickHandler);
 
     cameraToggleButton.addEventListener('click', async () => {
         console.log('Camera toggle button clicked.');
@@ -677,8 +676,11 @@ if (captureButton) {
         model = loadedModel;
         console.log('Handpose model loaded successfully.');
         preloadImages(backgroundImages);
-        initializeDots(currentNumDots);
-        animateDots();
+        // Defer initialization slightly to ensure layout is complete
+        setTimeout(() => {
+            initializeDots(currentNumDots);
+            animateDots();
+        }, 100);
         startSlideshow(); 
     });
 
