@@ -618,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     backgroundMusicToggle.addEventListener('change', () => {
         if (backgroundMusicToggle.checked) {
             try {
+                backgroundMusic.volume = 0.8; // Set volume to 80%
                 backgroundMusic.play();
                 console.log('Attempting to play background music. Paused state:', backgroundMusic.paused);
             } catch (error) {
