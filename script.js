@@ -362,8 +362,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 return true; 
             }
         
-
-            function resetConnectMode(success = false) {
+            function handleDotClick(e) {
+                e.stopPropagation(); 
+                console.log('Dot clicked', e.currentTarget);
+                if (!isConnectMode) {
+                    console.log('Not in connect mode, ignoring dot click');
+                    return;
+                }
+        
+                const clickedDot = e.currentTarget; 
+                const clickedIndex = dots.indexOf(clickedDot);
+                console.log('Clicked dot index:', clickedIndex);
+                
+                if (activeConnection === null) {
+                    console.log('First dot clicked for connection. Storing:', { dot: clickedDot, index: clickedIndex });
+                    activeConnection = { dot: clickedDot, index: clickedIndex };
+                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
+                } else {
+                    console.log('Second dot clicked for connection.');
+                    const firstDot = activeConnection.dot;
+                    const firstIndex = activeConnection.index;
+                                        
+                    if (clickedDot === firstDot) {
+                        console.log('Clicked same dot, deselecting');
+                        firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                        activeConnection = null;
+                        return;
+                    }
+                                        
+                    console.log('dotConnections before update:', dotConnections);
+                    dotConnections[firstIndex] = dotConnections[firstIndex] || [];
+                    dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
+                                        
+                    if (!dotConnections[firstIndex].includes(clickedIndex)) {
+                        dotConnections[firstIndex].push(clickedIndex);
+                        dotConnections[clickedIndex].push(firstIndex);
+                        console.log('Connection made between', firstIndex, 'and', clickedIndex, '. Updated dotConnections:', dotConnections);
+                    }
+                                        
+                    drawConnectionLines();
+                                        
+                    // The clicked dot becomes the new active connection
+                    firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
+                    activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
+                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
+                                        
+                    checkConnectionCompletion();
+                }
+            }
                 dots.forEach(dot => {
                     dot.style.boxShadow = 'none'; 
                     dot.style.cursor = 'default';
