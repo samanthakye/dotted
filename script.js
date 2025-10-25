@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCameraMode = false;
     let handAnimationRequest = null;
     let dotAnimationFrameRequest = null;
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    const backgroundMusicToggle = document.getElementById('backgroundMusicToggle');
+    const clickSound = document.getElementById('clickSound');
+    const connectSound = document.getElementById('connectSound');
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -58,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. Dot Management Functions ---
     function createDot() {
+        console.log('Creating a dot...');
         const dot = document.createElement('div');
         dot.classList.add('dot');
         dot.style.width = `${currentDotSize}px`;
@@ -67,15 +72,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dot.style.left = `${Math.random() * rect.width}px`;
         dot.style.top = `${Math.random() * rect.height}px`;
         mainContent.appendChild(dot);
+        console.log('Dot created:', dot);
         return dot;
     }
 
     function initializeDots(count) {
+        console.log('Initializing dots with count:', count);
         dots.forEach(dot => dot.remove());
         dots = [];
         for (let i = 0; i < count; i++) {
             dots.push(createDot());
         }
+        console.log('Dots initialized:', dots);
     }
 
     function updateDotProperties() {
@@ -366,41 +374,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                         if (activeConnection === null) {
                             console.log('First dot clicked for connection. Storing:', { dot: clickedDot, index: clickedIndex });
-                                                    activeConnection = { dot: clickedDot, index: clickedIndex };
-                                                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
+                                                                activeConnection = { dot: clickedDot, index: clickedIndex };
+                                                                clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
+                                                                if (clickSound) {
+                                                                    clickSound.load(); // Load the audio to ensure it's ready
+                                                                    clickSound.play(); // Play click sound
+                                                                    console.log('Playing click sound.');
+                                                                }
+                                                                
+                                                            } else {
+                                                                console.log('Second dot clicked for connection.');
+                                                                const firstDot = activeConnection.dot;
+                                                                const firstIndex = activeConnection.index;
                                                     
-                                                } else {
-                                                    console.log('Second dot clicked for connection.');
-                                                    const firstDot = activeConnection.dot;
-                                                    const firstIndex = activeConnection.index;
-                                        
-                                                    if (clickedDot === firstDot) {
-                                                        console.log('Clicked same dot, deselecting');
-                                                        firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                                                        activeConnection = null;
-                                                        return;
-                                                    }
-                                        
-                                                    console.log('dotConnections before update:', dotConnections);
-                                                    dotConnections[firstIndex] = dotConnections[firstIndex] || [];
-                                                    dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
-                                        
-                                                    if (!dotConnections[firstIndex].includes(clickedIndex)) {
-                                                        dotConnections[firstIndex].push(clickedIndex);
-                                                        dotConnections[clickedIndex].push(firstIndex);
-                                                        console.log('Connection made between', firstIndex, 'and', clickedIndex, '. Updated dotConnections:', dotConnections);
-                                                    }
+                                                                if (clickedDot === firstDot) {
+                                                                    console.log('Clicked same dot, deselecting');
+                                                                    firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                                                                    activeConnection = null;
+                                                                    if (clickSound) {
+                                                                        clickSound.load(); // Load the audio to ensure it's ready
+                                                                        clickSound.play(); // Play click sound for deselect
+                                                                        console.log('Playing click sound for deselect.');
+                                                                    }
+                                                                    return;
+                                                                }
                                                     
-                                                    drawConnectionLines();
+                                                                console.log('dotConnections before update:', dotConnections);
+                                                                dotConnections[firstIndex] = dotConnections[firstIndex] || [];
+                                                                dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
                                                     
-                                                    // The clicked dot becomes the new active connection
-                                                    firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
-                                                    activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
-                                                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
-                                        
-                                                    checkConnectionCompletion();
-                                                }
-                                            }            }    function resetConnectMode(success = false) {
+                                                                if (!dotConnections[firstIndex].includes(clickedIndex)) {
+                                                                    dotConnections[firstIndex].push(clickedIndex);
+                                                                    dotConnections[clickedIndex].push(firstIndex);
+                                                                    console.log('Connection made between', firstIndex, 'and', clickedIndex, '. Updated dotConnections:', dotConnections);
+                                                                    if (connectSound) {
+                                                                        connectSound.load(); // Load the audio to ensure it's ready
+                                                                        connectSound.play(); // Play connect sound
+                                                                        console.log('Playing connect sound.');
+                                                                    }
+                                                                }
+                                                                
+                                                                drawConnectionLines();
+                                                                
+                                                                // The clicked dot becomes the new active connection
+                                                                firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
+                                                                activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
+                                                                clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
+                                                    
+                                                                checkConnectionCompletion();
+                                                            }
+                                                        }                                            }            }    function resetConnectMode(success = false) {
         dots.forEach(dot => {
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
@@ -613,6 +636,23 @@ document.addEventListener('DOMContentLoaded', () => {
             startSlideshow();
         } else {
             stopSlideshow();
+        }
+    });
+
+    backgroundMusicToggle.addEventListener('change', () => {
+        console.log('Background music toggle changed. Checked:', backgroundMusicToggle.checked);
+        if (backgroundMusicToggle.checked) {
+            try {
+                backgroundMusic.load(); // Load the audio to ensure it's ready
+                backgroundMusic.volume = 0.8; // Set volume to 80%
+                backgroundMusic.play();
+                console.log('Attempting to play background music. Paused state:', backgroundMusic.paused);
+            } catch (error) {
+                console.error('Error attempting to play background music:', error);
+            }
+        } else {
+            backgroundMusic.pause();
+            console.log('Attempting to pause background music');
         }
     });
 
