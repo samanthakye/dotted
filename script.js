@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('container').style.backgroundImage = 'none';
             mainContent.removeEventListener('mousemove', mouseMoveHandler);
             mainContent.removeEventListener('dblclick', dblClickHandler);
-            cancelAnimationFrame(handAnimationRequest);
+            cancelAnimationFrame(dotAnimationFrameRequest); // Stop dot animation
             isConnectMode = false; // Ensure connect mode is off
             resetConnectMode(); // Clear any connections
             await setupCamera();
