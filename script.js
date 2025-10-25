@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isConnectMode) {
             drawConnectionLines();
-        } else {
+        } else if (!isScattered) {
             for (let i = 0; i < dots.length - 1; i++) {
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 const x1 = parseFloat(dots[i].style.left) + currentDotSize / 2;
@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dblClickHandler = (e) => {
         if (!isScattered && !isConnectMode) {
+            drawLines();
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
 
