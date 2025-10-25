@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let model = null;
     let isCameraMode = false;
     let handAnimationRequest = null;
+    let dotAnimationFrameRequest = null;
 
     // --- 2. State and Configuration Variables ---
     let dots = [];
@@ -100,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function animateHand() {
-        if (!isCameraMode || !model) return;
+        if (!isCameraMode || !model || isConnectMode) return;
 
         const predictions = await model.estimateHands(webcamFeed);
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
@@ -197,6 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. Animation Loop ---
     function animateDots() {
+        if (isConnectMode || isCameraMode) {
+            requestAnimationFrame(animateDots);
+            return;
+        }
         
         if (!isScattered) { 
             dots.forEach((dot, index) => {
@@ -233,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        requestAnimationFrame(animateDots);
+        dotAnimationFrameRequest = requestAnimationFrame(animateDots);
     }
     
     // --- 5. Background Image Functions ---
@@ -411,19 +416,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Double Click (Toggle Scatter/Connect State)
     const dblClickHandler = (e) => {
-        // ... (pre-check code) ...
-        
+        if (isCameraMode) return; // Prevent dblclick from interfering in camera mode
+
         if (!isScattered && !isConnectMode) {
             // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
-            // Removed: const sidebarWidth = 280; 
 
             dots.forEach(dot => {
                 dot.style.transition = scatterTransition; 
 
-                // FIX: Set scatter range from 0 to fullWidth
                 const minX = 0; 
                 const maxX = fullWidth; 
                 
@@ -439,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set new state
             isScattered = true;
             isConnectMode = true; 
+            cancelAnimationFrame(dotAnimationFrameRequest); // Stop normal dot animation
             
             activeConnection = null;
             dotConnections = {}; 
@@ -464,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             resetConnectMode(false); 
+            animateDots(); // Restart normal dot animation
 
             // REMOVE transition after it completes (0.5s)
             setTimeout(() => {
@@ -484,6 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContent.removeEventListener('mousemove', mouseMoveHandler);
             mainContent.removeEventListener('dblclick', dblClickHandler);
             cancelAnimationFrame(handAnimationRequest);
+            isConnectMode = false; // Ensure connect mode is off
+            resetConnectMode(); // Clear any connections
             await setupCamera();
             animateHand();
         } else {
@@ -494,6 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContent.addEventListener('mousemove', mouseMoveHandler);
             mainContent.addEventListener('dblclick', dblClickHandler);
             cancelAnimationFrame(handAnimationRequest);
+            isConnectMode = false; // Ensure connect mode is off
+            resetConnectMode(); // Clear any connections
             if (webcamFeed.srcObject) {
                 webcamFeed.srcObject.getTracks().forEach(track => track.stop());
             }
