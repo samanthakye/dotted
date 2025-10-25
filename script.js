@@ -617,8 +617,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     backgroundMusicToggle.addEventListener('change', () => {
         if (backgroundMusicToggle.checked) {
-            backgroundMusic.play();
-            console.log('Attempting to play background music');
+            try {
+                backgroundMusic.play();
+                console.log('Attempting to play background music. Paused state:', backgroundMusic.paused);
+            } catch (error) {
+                console.error('Error attempting to play background music:', error);
+            }
         } else {
             backgroundMusic.pause();
             console.log('Attempting to pause background music');
@@ -677,6 +681,16 @@ if (captureButton) {
         initializeDots(currentNumDots);
         animateDots();
         startSlideshow(); 
+
+        // Attempt to play background music on load, if not already playing
+        if (backgroundMusicToggle.checked && backgroundMusic.paused) {
+            try {
+                backgroundMusic.play();
+                console.log('Attempting to autoplay background music on load.');
+            } catch (error) {
+                console.log('Autoplay blocked. User interaction required to play music.', error);
+            }
+        }
     });
 
 });
