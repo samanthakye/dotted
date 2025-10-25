@@ -35,10 +35,6 @@ body, html {
     background-repeat: no-repeat;
 }
 
-/* ----------------------------------------------------- */
-/* SIDEBAR STYLES */
-/* ----------------------------------------------------- */
-
 #sidebar {
     width: 280px;
     background-color: var(--sidebar-bg);
@@ -79,45 +75,42 @@ body, html {
     color: var(--text-color);
 }
 
-.setting-group label[for="slideshowToggle"] {
-    font-weight: normal; 
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px; 
+#main-content {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden; 
+    transform: translateZ(0); 
 }
 
-/* ----------------------------------------------------- */
-/* BUTTON AND INPUT STYLES */
-/* ----------------------------------------------------- */
-
-/* FIX: Range Input Track Color (The Bar) changed to white */
-.setting-group input[type="range"] {
-    width: 100%;
-    height: 4px;
-    background: #ffffff; /* Changed to White */
-    outline: none;
-    opacity: 0.9; /* Slightly less opaque for better visibility */
-    transition: opacity .2s;
-}
-
-.setting-group input[type="range"]:hover {
-    opacity: 1;
-}
-
-/* FIX: Range Input Thumb (The Knob) color changed to white */
-.setting-group input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 15px;
-    height: 15px;
+.dot {
+    position: absolute;
+    width: var(--dot-size);
+    height: var(--dot-size);
+    background-color: var(--dot-color);
     border-radius: 50%;
-    background: #ffffff; /* Changed to White */
-    cursor: pointer;
-    border: 2px solid var(--sidebar-bg);
+    z-index: 1000; 
 }
 
-/* FIX: Capture and Camera Mode Buttons Base Color changed to black */
+#dot-connections-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999; 
+}
+
+#webcamFeed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    transform: scaleX(-1); 
+    z-index: 10;
+}
+
 .circular-button, .snapshot-button {
     width: 100%;
     padding: 10px 0;
@@ -142,56 +135,7 @@ body, html {
     transform: translateY(1px);
 }
 
-/* Styling for other input types remains the same */
-.setting-group input[type="color"] {
-    border: none;
-    width: 40px;
-    height: 25px;
-    background: none;
-    cursor: pointer;
+.circular-button:disabled {
+    background-color: #999999;
+    cursor: not-allowed;
 }
-
-/* ... (color and file input styles) ... */
-
-/* ----------------------------------------------------- */
-/* MAIN CONTENT / DOTS / VIDEO STYLES */
-/* ----------------------------------------------------- */
-
-#main-content {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden; 
-    transform: translateZ(0); 
-}
-
-/* Webcam feed element */
-#webcamFeed {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover; 
-    transform: scaleX(-1); 
-    z-index: 10;
-}
-
-.dot {
-    position: absolute;
-    width: var(--dot-size);
-    height: var(--dot-size);
-    background-color: var(--dot-color);
-    border-radius: 50%;
-    z-index: 1000; 
-}
-
-#dot-connections-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999; 
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');

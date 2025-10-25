@@ -10,10 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
-    </head>
+</head>
 <body>
     <div id="container">
-        
         <aside id="sidebar">
             <h2>dotted.</h2>
             <div class="setting-group">
@@ -44,13 +43,11 @@
                 <label for="lineColor">Line Color:</label>
                 <input type="color" id="lineColor" value="#ffffff">
             </div>
-
             <div class="setting-group">
                 <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
             </div>
-            
             <div class="setting-group">
-                <button id="cameraToggleButton" class="circular-button">👁️ Camera Mode</button>
+                <button id="cameraToggleButton" class="circular-button" disabled>👁️ Camera Mode</button>
             </div>
             <div class="setting-group">
                 <label for="backgroundImageUpload">Upload Background:</label>
@@ -84,15 +81,10 @@
         <main id="main-content">
             <video id="webcamFeed" style="display: none;" autoplay playsinline></video>
             <canvas id="handCanvas" style="display: none; position: absolute; top: 0; left: 0; z-index: 11;"></canvas>
-            
-            <svg id="dot-connections-svg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-            </svg>
         </main>
             
     </div>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    
     <script src="script.js"></script>
     
 </body>

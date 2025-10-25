@@ -7,6 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const followSpeedValueSpan = document.getElementById('followSpeedValue');
     const numDotsInput = document.getElementById('numDots');
     const numDotsValueSpan = document.getElementById('numDotsValue');
+    const lineThicknessInput = document.getElementById('lineThickness');
+    const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
+    const lineColorInput = document.getElementById('lineColor');
+    const cameraToggleButton = document.getElementById('cameraToggleButton');
+    const webcamFeed = document.getElementById('webcamFeed');
+    const handCanvas = document.getElementById('handCanvas');
+    const handCtx = handCanvas.getContext('2d');
+    const backgroundImageUpload = document.getElementById('backgroundImageUpload');
+    const slideshowToggle = document.getElementById('slideshowToggle');
+    const defaultBackgrounds = document.getElementById('defaultBackgrounds');
+    const snapshotBtn = document.getElementById('snapshot-btn');
 
     let dots = [];
     let mouseX = 0;
@@ -16,19 +27,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotColor = dotColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
+    let currentLineThickness = parseFloat(lineThicknessInput.value);
+    let currentLineColor = lineColorInput.value;
 
-    let currentLineColor = '#ffffff'; // Assuming default line color is white
-    let currentLineThickness = 1.5; // Assuming default line thickness
-    
-    let isScattered = false;      
-    let isConnectMode = false;    
-    
-    let activeConnection = null;  
-    let dotConnections = {};      
-    
-    const floatIntensity = 0.005; 
-    const maxFloatDistance = 5;   
+    let isCameraMode = false;
+    let model = null;
+    let handAnimationRequest = null;
+
+    let isScattered = false;
+    let isConnectMode = false;
+    let activeConnection = null;
+    let dotConnections = {};
+
+    const floatIntensity = 0.005;
+    const maxFloatDistance = 5;
     const scatterTransition = 'all 0.5s ease-out';
+
+    const backgroundImages = [
+        'fall.JPG',
+        'cat.JPG',
+        'beach.jpeg',
+        'houses.jpg',
+        'kusama.JPG',
+        'museum.jpeg',
+        'park.JPG',
+        'sashimi.JPG',
+        'studio.JPG',
+        'trees.JPG',
+        'water.JPG'
+    ];
+    let currentBgIndex = 0;
+    let slideshowInterval = null;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'dot-connections-svg';
+    mainContent.appendChild(svg);
 
     function createDot() {
         const dot = document.createElement('div');
@@ -40,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dot.style.left = `${Math.random() * rect.width}px`;
         dot.style.top = `${Math.random() * rect.height}px`;
         mainContent.appendChild(dot);
-        dot.addEventListener('click', handleDotClick); // Add click listener
+        dot.addEventListener('click', handleDotClick);
         return dot;
     }
 
@@ -58,6 +91,75 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.style.height = `${currentDotSize}px`;
             dot.style.backgroundColor = currentDotColor;
         });
+    }
+
+    function drawLines() {
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
+
+        if (isConnectMode) {
+            drawConnectionLines();
+        } else {
+            for (let i = 0; i < dots.length - 1; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const x1 = parseFloat(dots[i].style.left) + currentDotSize / 2;
+                const y1 = parseFloat(dots[i].style.top) + currentDotSize / 2;
+                const x2 = parseFloat(dots[i + 1].style.left) + currentDotSize / 2;
+                const y2 = parseFloat(dots[i + 1].style.top) + currentDotSize / 2;
+
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', currentLineColor);
+                line.setAttribute('stroke-width', currentLineThickness);
+                svg.appendChild(line);
+            }
+        }
+    }
+
+    function animateDots() {
+        if (isCameraMode) return;
+
+        if (!isScattered) { 
+            dots.forEach((dot, index) => {
+                let targetX, targetY;
+
+                if (index === 0) {
+                    targetX = mouseX;
+                    targetY = mouseY;
+                } else {
+                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
+                }
+
+                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                const dx = targetX - currentX;
+                const dy = targetY - currentY;
+
+                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+            });
+        } else {
+            const time = Date.now() * floatIntensity;
+
+            dots.forEach((dot, index) => {
+                let currentX = parseFloat(dot.style.left);
+                let currentY = parseFloat(dot.style.top);
+
+                const floatX = Math.sin(time + index) * maxFloatDistance;
+                const floatY = Math.cos(time + index) * maxFloatDistance;
+                
+                dot.style.left = `${currentX + floatX * 0.01}px`; 
+                dot.style.top = `${currentY + floatY * 0.01}px`;
+            });
+        }
+
+        drawLines();
+        requestAnimationFrame(animateDots);
     }
 
     async function setupCamera() {
@@ -80,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function animateHand() {
-        if (!isCameraMode || !model || isConnectMode) return;
+        if (!isCameraMode || !model) return;
 
         const predictions = await model.estimateHands(webcamFeed);
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
@@ -89,134 +191,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const keypoints = predictions[0].landmarks;
             const pointerFingerTip = keypoints[8]; // Index Finger Tip
 
-            if (isOpenHand(keypoints)) {
-                if (!isScattered) {
-                    isScattered = true;
-                    // Trigger scattering animation
-                    const fullWidth = window.innerWidth;
-                    const fullHeight = window.innerHeight;
-
-                    dots.forEach(dot => {
-                        dot.style.transition = scatterTransition;
-                        const randomX = Math.random() * fullWidth;
-                        const randomY = Math.random() * fullHeight;
-                        dot.style.left = `${randomX - currentDotSize / 2}px`;
-                        dot.style.top = `${randomY - currentDotSize / 2}px`;
-                        dot.style.transform = 'translateZ(0)';
-                    });
-                    setTimeout(() => {
-                        dots.forEach(dot => {
-                            dot.style.transition = 'none';
-                        });
-                    }, 500);
-                }
-            } else {
-                if (isScattered) {
-                    isScattered = false;
-                    // Revert to following behavior (or stop scattering)
-                    dots.forEach(dot => {
-                        dot.style.transition = scatterTransition;
-                    });
-                    setTimeout(() => {
-                        dots.forEach(dot => {
-                            dot.style.transition = 'none';
-                        });
-                    }, 500);
-                }
-                // Only follow finger if not scattered
-                if (dots[0]) {
-                    // Invert the X-coordinate for mirrored movement
-                    const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
-                    dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
-                    dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
-                }
+            if (dots[0]) {
+                const mirroredX = webcamFeed.videoWidth - pointerFingerTip[0];
+                dots[0].style.left = `${mirroredX - currentDotSize / 2}px`;
+                dots[0].style.top = `${pointerFingerTip[1] - currentDotSize / 2}px`;
             }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
     }
 
-    function isOpenHand(keypoints) {
-        // Keypoints for finger tips and palm base
-        const thumbTip = keypoints[4];
-        const indexTip = keypoints[8];
-        const middleTip = keypoints[12];
-        const ringTip = keypoints[16];
-        const pinkyTip = keypoints[20];
-        const palmBase = keypoints[0];
-
-        // Calculate distances from palm base to finger tips
-        const dist = (p1, p2) => Math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2);
-
-        const thumbDist = dist(palmBase, thumbTip);
-        const indexDist = dist(palmBase, indexTip);
-        const middleDist = dist(palmBase, middleTip);
-        const ringDist = dist(palmBase, ringTip);
-        const pinkyDist = dist(palmBase, pinkyTip);
-
-        // Define thresholds for an "open" hand. These values might need adjustment.
-        const openThreshold = 100; // Example value, depends on camera distance and hand size
-
-        // Check if all fingers are extended (distance from palm is large enough)
-        const allFingersExtended = 
-            thumbDist > openThreshold &&
-            indexDist > openThreshold &&
-            middleDist > openThreshold &&
-            ringDist > openThreshold &&
-            pinkyDist > openThreshold;
-
-        // Additionally, check angles or relative positions to ensure they are spread out
-        // This is a simplified check, more robust detection would involve angles between fingers
-        const fingersSpread = 
-            indexTip[0] < middleTip[0] && // Index left of middle
-            middleTip[0] < ringTip[0] &&  // Middle left of ring
-            ringTip[0] < pinkyTip[0];     // Ring left of pinky
-
-        return allFingersExtended && fingersSpread;
+    function changeBackground(image) {
+        document.getElementById('container').style.backgroundImage = `url('${image}')`;
     }
 
-    function animateDots() {
-        if (isConnectMode) {
-            requestAnimationFrame(animateDots);
-            return;
-        }
-        
-        if (!isScattered) { 
-            dots.forEach((dot, index) => {
-                let targetX, targetY;
+    function startSlideshow() {
+        if (slideshowInterval) clearInterval(slideshowInterval);
+        slideshowInterval = setInterval(() => {
+            currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
+            changeBackground(backgroundImages[currentBgIndex]);
+        }, 5000);
+    }
 
-                if (index === 0) {
-                    targetX = mouseX;
-                    targetY = mouseY;
-                } else {
-                    targetX = parseFloat(dots[index - 1].style.left) + currentDotSize / 2;
-                    targetY = parseFloat(dots[index - 1].style.top) + currentDotSize / 2;
-                }
-
-                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-                const dx = targetX - currentX;
-                const dy = targetY - currentY;
-
-                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-            });
-            
-        } else {
-            const time = Date.now() * floatIntensity;
-
-            dots.forEach((dot, index) => {
-                let currentX = parseFloat(dot.style.left);
-                let currentY = parseFloat(dot.style.top);
-
-                const floatX = Math.sin(time + index) * maxFloatDistance;
-                const floatY = Math.cos(time + index) * maxFloatDistance;
-                
-                dot.style.left = `${currentX + floatX * 0.01}px`; 
-                dot.style.top = `${currentY + floatY * 0.01}px`;
-            });
-        }
-        requestAnimationFrame(animateDots);
+    function stopSlideshow() {
+        clearInterval(slideshowInterval);
+        slideshowInterval = null;
     }
 
     const mouseMoveHandler = (e) => {
@@ -227,12 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mainContent.addEventListener('mousemove', mouseMoveHandler);
 
-    // Double Click (Toggle Scatter/Connect State)
     const dblClickHandler = (e) => {
-        console.log('dblClickHandler triggered. isConnectMode:', isConnectMode);
         if (!isScattered && !isConnectMode) {
-            // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
-            
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
 
@@ -251,11 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.transform = 'translateZ(0)';
             });
             
-            // Set new state
             isScattered = true;
             isConnectMode = true; 
-            console.log('isConnectMode set to', isConnectMode);
-            cancelAnimationFrame(dotAnimationFrameRequest); // Stop normal dot animation
             
             activeConnection = null;
             dotConnections = {}; 
@@ -265,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.cursor = 'pointer'; 
             });
 
-            // REMOVE transition after it completes (0.5s)
             setTimeout(() => {
                 dots.forEach(dot => {
                     dot.style.transition = 'none';
@@ -278,9 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             resetConnectMode(false); 
-            animateDots(); // Restart normal dot animation
 
-            // REMOVE transition after it completes (0.5s)
             setTimeout(() => {
                 dots.forEach(dot => {
                     dot.style.transition = 'none';
@@ -290,15 +278,75 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     mainContent.addEventListener('dblclick', dblClickHandler);
 
-    const cameraToggleButton = document.getElementById('cameraToggleButton');
-    const webcamFeed = document.getElementById('webcamFeed');
-    const handCanvas = document.getElementById('handCanvas');
-    const handCtx = handCanvas.getContext('2d');
+    function handleDotClick(e) {
+        if (!isConnectMode) return;
 
-    let model = null;
-    let handAnimationRequest = null;
+        const clickedDot = e.target;
+
+        if (activeConnection) {
+            if (activeConnection !== clickedDot) {
+                const dotId1 = dots.indexOf(activeConnection);
+                const dotId2 = dots.indexOf(clickedDot);
+
+                if (!dotConnections[dotId1]) {
+                    dotConnections[dotId1] = [];
+                }
+                dotConnections[dotId1].push(dotId2);
+
+                drawConnectionLines();
+            }
+            activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+            activeConnection = null;
+        } else {
+            activeConnection = clickedDot;
+            activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
+        }
+    }
+
+    function drawConnectionLines() {
+        Object.keys(dotConnections).forEach(dotId1 => {
+            dotConnections[dotId1].forEach(dotId2 => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const x1 = parseFloat(dots[dotId1].style.left) + currentDotSize / 2;
+                const y1 = parseFloat(dots[dotId1].style.top) + currentDotSize / 2;
+                const x2 = parseFloat(dots[dotId2].style.left) + currentDotSize / 2;
+                const y2 = parseFloat(dots[dotId2].style.top) + currentDotSize / 2;
+
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', currentLineColor);
+                line.setAttribute('stroke-width', currentLineThickness);
+                svg.appendChild(line);
+            });
+        });
+    }
+
+    function resetConnectMode(shouldAnimate) {
+        isScattered = false;
+        isConnectMode = false;
+        activeConnection = null;
+        dotConnections = {};
+        
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
+
+        dots.forEach(dot => {
+            dot.style.boxShadow = 'none';
+            dot.style.cursor = 'default';
+            if (shouldAnimate) {
+                dot.style.transition = scatterTransition;
+            }
+        });
+    }
 
     cameraToggleButton.addEventListener('click', async () => {
+        if (!model) {
+            alert('Handpose model not loaded yet. Please wait.');
+            return;
+        }
         isCameraMode = !isCameraMode;
         if (isCameraMode) {
             webcamFeed.style.display = 'block';
@@ -306,26 +354,34 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('container').style.backgroundImage = 'none';
             mainContent.removeEventListener('mousemove', mouseMoveHandler);
             mainContent.removeEventListener('dblclick', dblClickHandler);
-            cancelAnimationFrame(dotAnimationFrameRequest); // Stop dot animation
-            isConnectMode = false; // Ensure connect mode is off
-            resetConnectMode(); // Clear any connections
+            stopSlideshow();
+            resetConnectMode(false);
             await setupCamera();
             animateHand();
         } else {
             webcamFeed.style.display = 'none';
             handCanvas.style.display = 'none';
-            handCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset canvas transformation
-            // document.getElementById('container').style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`; // Re-enable background image
+            changeBackground(backgroundImages[currentBgIndex]);
             mainContent.addEventListener('mousemove', mouseMoveHandler);
             mainContent.addEventListener('dblclick', dblClickHandler);
+            if (slideshowToggle.checked) {
+                startSlideshow();
+            }
             cancelAnimationFrame(handAnimationRequest);
-            isConnectMode = false; // Ensure connect mode is off
-            resetConnectMode(); // Clear any connections
             if (webcamFeed.srcObject) {
                 webcamFeed.srcObject.getTracks().forEach(track => track.stop());
             }
             animateDots();
         }
+    });
+
+    snapshotBtn.addEventListener('click', () => {
+        html2canvas(document.body).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'dotted-snapshot.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
     });
 
     dotSizeInput.addEventListener('input', (e) => {
@@ -352,25 +408,52 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeDots(currentNumDots);
     });
 
-    const lineThicknessInput = document.getElementById('lineThickness');
-    const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
-    const lineColorInput = document.getElementById('lineColor');
-
     lineThicknessInput.addEventListener('input', (e) => {
         currentLineThickness = parseFloat(e.target.value);
         lineThicknessValueSpan.textContent = `${currentLineThickness}px`;
-        drawConnectionLines(); // Redraw lines with new thickness
     });
 
     lineColorInput.addEventListener('input', (e) => {
         currentLineColor = e.target.value;
-        drawConnectionLines(); // Redraw lines with new color
+    });
+
+    backgroundImageUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                changeBackground(event.target.result);
+                stopSlideshow();
+                slideshowToggle.checked = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    slideshowToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            startSlideshow();
+        } else {
+            stopSlideshow();
+        }
+    });
+
+    defaultBackgrounds.addEventListener('change', (e) => {
+        const selectedBg = e.target.value;
+        if (selectedBg) {
+            currentBgIndex = backgroundImages.indexOf(selectedBg);
+            changeBackground(selectedBg);
+            stopSlideshow();
+            slideshowToggle.checked = false;
+        }
     });
 
     initializeDots(currentNumDots);
     animateDots();
+    startSlideshow();
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
+        cameraToggleButton.disabled = false;
     });
 });
