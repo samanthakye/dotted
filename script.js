@@ -98,23 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.removeChild(svg.firstChild);
         }
 
-        if (!isConnectMode && !isScattered) {
-            for (let i = 0; i < dots.length - 1; i++) {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                const x1 = parseFloat(dots[i].style.left) + currentDotSize / 2;
-                const y1 = parseFloat(dots[i].style.top) + currentDotSize / 2;
-                const x2 = parseFloat(dots[i + 1].style.left) + currentDotSize / 2;
-                const y2 = parseFloat(dots[i + 1].style.top) + currentDotSize / 2;
-
-                line.setAttribute('x1', x1);
-                line.setAttribute('y1', y1);
-                line.setAttribute('x2', x2);
-                line.setAttribute('y2', y2);
-                line.setAttribute('stroke', currentLineColor);
-                line.setAttribute('stroke-width', currentLineThickness);
-                svg.appendChild(line);
-            }
-        } else if (isConnectMode) {
+        if (isConnectMode) {
             drawConnectionLines();
         }
     }
@@ -259,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dotConnections = {}; 
             
             dots.forEach(dot => {
-                dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                dot.style.boxShadow = `0 0 10px 5px #FFFFE0`;
                 dot.style.cursor = 'pointer'; 
             });
 
@@ -300,10 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 dotConnections[dotId1].push(dotId2);
 
-                drawConnectionLines();
+activeConnection.style.boxShadow = `0 0 10px 5px #FFFFE0`;
+                activeConnection = clickedDot;
+activeConnection.style.boxShadow = `0 0 20px 10px #FFFFE0`;
+            } else {
+                activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                activeConnection = null;
             }
-            activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-            activeConnection = null;
         } else {
             activeConnection = clickedDot;
             activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
@@ -311,6 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawConnectionLines() {
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
         Object.keys(dotConnections).forEach(dotId1 => {
             dotConnections[dotId1].forEach(dotId2 => {
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -325,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 line.setAttribute('y2', y2);
                 line.setAttribute('stroke', currentLineColor);
                 line.setAttribute('stroke-width', currentLineThickness);
+                line.setAttribute('stroke-dasharray', '5, 5');
                 svg.appendChild(line);
             });
         });
