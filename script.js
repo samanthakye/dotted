@@ -618,8 +618,10 @@ document.addEventListener('DOMContentLoaded', () => {
     backgroundMusicToggle.addEventListener('change', () => {
         if (backgroundMusicToggle.checked) {
             backgroundMusic.play();
+            console.log('Attempting to play background music');
         } else {
             backgroundMusic.pause();
+            console.log('Attempting to pause background music');
         }
     });
 
