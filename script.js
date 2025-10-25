@@ -4,10 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dotSizeInput = document.getElementById('dotSize');
     const dotSizeValueSpan = document.getElementById('dotSizeValue');
     const dotColorInput = document.getElementById('dotColor');
+    const lineColorInput = document.getElementById('lineColor');
     const followSpeedInput = document.getElementById('followSpeed');
     const followSpeedValueSpan = document.getElementById('followSpeedValue');
     const numDotsInput = document.getElementById('numDots');
     const numDotsValueSpan = document.getElementById('numDotsValue');
+    const lineThicknessInput = document.getElementById('lineThickness');
+    const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
     const backgroundImageUpload = document.getElementById('backgroundImageUpload');
     const defaultBackgroundsSelect = document.getElementById('defaultBackgrounds');
     const slideshowToggle = document.getElementById('slideshowToggle');
@@ -30,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
+    let currentLineColor = lineColorInput.value;
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
+    let currentLineThickness = parseFloat(lineThicknessInput.value);
     
     let isScattered = false;      
     let isConnectMode = false;    
@@ -272,120 +277,123 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Connect-The-Dots Logic ---
     
-    function drawConnectionLines() {
-        const svgElement = document.getElementById('dot-connections-svg');
-        if (!svgElement) {
-            console.log('SVG element not found');
-            return;
-        }
-
-        svgElement.innerHTML = ''; 
-        console.log('drawConnectionLines called, SVG cleared');
-
-        const linesDrawn = new Set(); 
-
-        dots.forEach((dot, index) => {
-            const connectedArray = dotConnections[index] || [];
-            
-            connectedArray.forEach(connectedIndex => {
-                const partnerDot = dots[connectedIndex];
-                
-                const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
-
-                if (!linesDrawn.has(key)) {
-                    console.log('Attempting to draw line between', index, 'and', connectedIndex);
-                    
-                    const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
-                    const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
-                    const x2 = parseFloat(partnerDot.style.left) + currentDotSize / 2;
-                    const y2 = parseFloat(partnerDot.style.top) + currentDotSize / 2;
-
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x1);
-                    line.setAttribute('y1', y1);
-                    line.setAttribute('x2', x2);
-                    line.setAttribute('y2', y2);
-                    
-                    line.setAttribute('stroke', '#FFFFFF'); 
-                    
-                    line.setAttribute('stroke-width', 3);
-                    line.setAttribute('stroke-linecap', 'round');
-                    line.setAttribute('stroke-dasharray', '5, 5'); 
-
-                    svgElement.appendChild(line);
-                    linesDrawn.add(key);
-                    console.log('Line drawn:', line);
+            function drawConnectionLines() {
+                const svgElement = document.getElementById('dot-connections-svg');
+                if (!svgElement) {
+                    console.log('SVG element not found');
+                    return;
                 }
-            });
-        });
-    }
-
-    function checkConnectionCompletion() {
-        let allConnected = true;
-        for (let i = 0; i < dots.length; i++) {
-            if (!dotConnections[i] || dotConnections[i].length === 0) {
-                allConnected = false;
-                break;
+        
+                svgElement.innerHTML = ''; 
+                console.log('drawConnectionLines called, SVG cleared. Current dotConnections:', dotConnections);
+        
+                const linesDrawn = new Set(); 
+        
+                dots.forEach((dot, index) => {
+                    const connectedArray = dotConnections[index] || [];
+                    
+                    connectedArray.forEach(connectedIndex => {
+                        const partnerDot = dots[connectedIndex];
+                        
+                        const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
+        
+                        if (!linesDrawn.has(key)) {
+                            console.log('Attempting to draw line between dot', index, 'and dot', connectedIndex);
+                            
+                            const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
+                            const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
+                            const x2 = parseFloat(partnerDot.style.left) + currentDotSize / 2;
+                            const y2 = parseFloat(partnerDot.style.top) + currentDotSize / 2;
+        
+                            console.log(`Line coordinates: (${x1}, ${y1}) to (${x2}, ${y2})`);
+        
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', x1);
+                            line.setAttribute('y1', y1);
+                            line.setAttribute('x2', x2);
+                            line.setAttribute('y2', y2);
+                            
+                                                                                        line.setAttribute('stroke', currentLineColor); 
+                            
+                                                                                        
+                            
+                                                                                        line.setAttribute('stroke-width', currentLineThickness);
+                            
+                                                                                        line.setAttribute('stroke-linecap', 'round');                            line.setAttribute('stroke-dasharray', '5, 5'); 
+        
+                            svgElement.appendChild(line);
+                            linesDrawn.add(key);
+                            console.log('Line element created:', line);
+                        }
+                    });
+                });
             }
-        }
-
-        if (allConnected) {
-            resetConnectMode(true);
-        }
-    }
-
-    function isDotEligible(dot) {
-        return true; 
-    }
-
-    function handleDotClick(e) {
-        e.stopPropagation(); 
-        console.log('Dot clicked', e.currentTarget);
-        if (!isConnectMode) {
-            console.log('Not in connect mode, ignoring dot click');
-            return;
-        }
-
-        const clickedDot = e.currentTarget; 
-        const clickedIndex = dots.indexOf(clickedDot);
-        console.log('Clicked dot index:', clickedIndex);
-
-        if (activeConnection === null) {
-            console.log('First dot clicked for connection');
-            activeConnection = { dot: clickedDot, index: clickedIndex };
-            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700'; // Highlight first dot
-            
-        } else {
-            console.log('Second dot clicked for connection');
-            const firstDot = activeConnection.dot;
-            const firstIndex = activeConnection.index;
-
-            if (clickedDot === firstDot) {
-                console.log('Clicked same dot, deselecting');
-                firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                activeConnection = null;
-                return;
+        
+            function checkConnectionCompletion() {
+                let allConnected = true;
+                for (let i = 0; i < dots.length; i++) {
+                    if (!dotConnections[i] || dotConnections[i].length === 0) {
+                        allConnected = false;
+                        break;
+                    }
+                }
+        
+                if (allConnected) {
+                    console.log("All dots connected!");
+                    resetConnectMode(true);
+                }
             }
-
-            dotConnections[firstIndex] = dotConnections[firstIndex] || [];
-            dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
-
-            if (!dotConnections[firstIndex].includes(clickedIndex)) {
-                dotConnections[firstIndex].push(clickedIndex);
-                dotConnections[clickedIndex].push(firstIndex);
-                console.log('Connection made between', firstIndex, 'and', clickedIndex);
+        
+            function isDotEligible(dot) {
+                return true; 
             }
-            
-            drawConnectionLines();
-            
-            firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; 
-            activeConnection = null; 
-
-            checkConnectionCompletion();
-        }
-    }
-
-    function resetConnectMode(success = false) {
+        
+            function handleDotClick(e) {
+                e.stopPropagation(); 
+                console.log('Dot clicked', e.currentTarget);
+                if (!isConnectMode) {
+                    console.log('Not in connect mode, ignoring dot click');
+                    return;
+                }
+        
+                const clickedDot = e.currentTarget; 
+                const clickedIndex = dots.indexOf(clickedDot);
+                console.log('Clicked dot index:', clickedIndex);
+        
+                        if (activeConnection === null) {
+                                                    console.log('First dot clicked for connection. Storing:', { dot: clickedDot, index: clickedIndex });
+                                                    activeConnection = { dot: clickedDot, index: clickedIndex };
+                                                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight first dot with paler yellow
+                                                    
+                                                } else {
+                                                    console.log('Second dot clicked for connection.');
+                                                    const firstDot = activeConnection.dot;
+                                                    const firstIndex = activeConnection.index;
+                                        
+                                                    if (clickedDot === firstDot) {
+                                                        console.log('Clicked same dot, deselecting');
+                                                        firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                                                        activeConnection = null;
+                                                        return;
+                                                    }
+                                        
+                                                    console.log('dotConnections before update:', dotConnections);
+                                                    dotConnections[firstIndex] = dotConnections[firstIndex] || [];
+                                                    dotConnections[clickedIndex] = dotConnections[clickedIndex] || [];
+                                        
+                                                    if (!dotConnections[firstIndex].includes(clickedIndex)) {
+                                                        dotConnections[firstIndex].push(clickedIndex);
+                                                        dotConnections[clickedIndex].push(firstIndex);
+                                                        console.log('Connection made between', firstIndex, 'and', clickedIndex, '. Updated dotConnections:', dotConnections);
+                                                    }
+                                                    
+                                                    drawConnectionLines();
+                                                    
+                                                    // The clicked dot becomes the new active connection
+                                                    firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`; // Unhighlight previous first dot
+                                                    activeConnection = { dot: clickedDot, index: clickedIndex }; // Set new active dot
+                                                    clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow                            checkConnectionCompletion();
+                        }            }    function resetConnectMode(success = false) {
         dots.forEach(dot => {
             dot.style.boxShadow = 'none'; 
             dot.style.cursor = 'default';
@@ -542,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDotProperties();
     });
 
+    lineColorInput.addEventListener('input', (e) => {
+        currentLineColor = e.target.value;
+        drawConnectionLines(); // Redraw lines with new color
+    });
+
     followSpeedInput.addEventListener('input', (e) => {
         currentFollowSpeed = parseFloat(e.target.value);
         followSpeedValueSpan.textContent = e.target.value;
@@ -551,6 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentNumDots = parseInt(e.target.value);
         numDotsValueSpan.textContent = currentNumDots;
         initializeDots(currentNumDots);
+    });
+
+    lineThicknessInput.addEventListener('input', (e) => {
+        currentLineThickness = parseFloat(e.target.value);
+        lineThicknessValueSpan.textContent = `${currentLineThickness}px`;
+        drawConnectionLines(); // Redraw lines with new thickness
     });
 
     backgroundImageUpload.addEventListener('change', (e) => {
