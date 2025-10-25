@@ -203,8 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }, 500);
                 }
-                let targetX = webcamFeed.videoWidth - keypoints[8][0];
-                let targetY = keypoints[8][1];
+                let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 2;
+                let targetY = keypoints[8][1] * 2;
 
                 dots.forEach((dot, index) => {
                     const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
