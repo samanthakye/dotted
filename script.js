@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dotConnections = {}; 
             
             dots.forEach(dot => {
-                dot.style.boxShadow = `0 0 10px 5px #FFFFE0`;
+                dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
             });
 
@@ -344,9 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 dotConnections[dotId1].push(dotId2);
 
-activeConnection.style.boxShadow = `0 0 10px 5px #FFFFE0`;
+activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 activeConnection = clickedDot;
-activeConnection.style.boxShadow = `0 0 20px 10px #FFFFE0`;
+activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             } else {
                 activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 activeConnection = null;
