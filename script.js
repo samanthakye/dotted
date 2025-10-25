@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dot.style.left = `${Math.random() * rect.width}px`;
         dot.style.top = `${Math.random() * rect.height}px`;
         mainContent.appendChild(dot);
+        dot.addEventListener('click', handleDotClick); // Add click listener
         return dot;
     }
 
