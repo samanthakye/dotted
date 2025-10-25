@@ -274,9 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function drawConnectionLines() {
         const svgElement = document.getElementById('dot-connections-svg');
-        if (!svgElement) return;
+        if (!svgElement) {
+            console.log('SVG element not found');
+            return;
+        }
 
         svgElement.innerHTML = ''; 
+        console.log('drawConnectionLines called, SVG cleared');
 
         const linesDrawn = new Set(); 
 
@@ -289,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const key = Math.min(index, connectedIndex) + '-' + Math.max(index, connectedIndex);
 
                 if (!linesDrawn.has(key)) {
+                    console.log('Attempting to draw line between', index, 'and', connectedIndex);
                     
                     const x1 = parseFloat(dot.style.left) + currentDotSize / 2;
                     const y1 = parseFloat(dot.style.top) + currentDotSize / 2;
@@ -309,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     svgElement.appendChild(line);
                     linesDrawn.add(key);
+                    console.log('Line drawn:', line);
                 }
             });
         });
@@ -334,21 +340,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleDotClick(e) {
         e.stopPropagation(); 
-        if (!isConnectMode) return;
+        console.log('Dot clicked', e.currentTarget);
+        if (!isConnectMode) {
+            console.log('Not in connect mode, ignoring dot click');
+            return;
+        }
 
         const clickedDot = e.currentTarget; 
         const clickedIndex = dots.indexOf(clickedDot);
+        console.log('Clicked dot index:', clickedIndex);
 
         if (activeConnection === null) {
-            
+            console.log('First dot clicked for connection');
             activeConnection = { dot: clickedDot, index: clickedIndex };
-            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700';
+            clickedDot.style.boxShadow = '0 0 10px 5px #FFD700'; // Highlight first dot
             
         } else {
+            console.log('Second dot clicked for connection');
             const firstDot = activeConnection.dot;
             const firstIndex = activeConnection.index;
 
             if (clickedDot === firstDot) {
+                console.log('Clicked same dot, deselecting');
                 firstDot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 activeConnection = null;
                 return;
@@ -360,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dotConnections[firstIndex].includes(clickedIndex)) {
                 dotConnections[firstIndex].push(clickedIndex);
                 dotConnections[clickedIndex].push(firstIndex);
+                console.log('Connection made between', firstIndex, 'and', clickedIndex);
             }
             
             drawConnectionLines();
@@ -412,13 +426,15 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContent.addEventListener('mousemove', mouseMoveHandler);
 
     // Double Click (Toggle Scatter/Connect State)
-    mainContent.addEventListener('mousemove', mouseMoveHandler); 
-
-    // Double Click (Toggle Scatter/Connect State)
     const dblClickHandler = (e) => {
-        if (isCameraMode) return; // Prevent dblclick from interfering in camera mode
+        console.log('Double clicked');
+        if (isCameraMode) {
+            console.log('In camera mode, dblclick ignored');
+            return; // Prevent dblclick from interfering in camera mode
+        }
 
         if (!isScattered && !isConnectMode) {
+            console.log('Entering connect mode');
             // State 1: FOLLOW -> SCATTER/CONNECT (Smooth Scatter Out)
             
             const fullWidth = window.innerWidth;
@@ -451,6 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 dot.style.cursor = 'pointer'; 
                 dot.addEventListener('click', handleDotClick); 
+                console.log('Added click listener to dot', dot);
             });
 
             // REMOVE transition after it completes (0.5s)
@@ -461,8 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
 
         } else if (isConnectMode) {
-            // State 2: SCATTER/CONNECT -> FOLLOW (Manual Double-Click Reset)
-
+            console.log('Exiting connect mode');
             dots.forEach(dot => {
                 dot.style.transition = scatterTransition;
             });
@@ -478,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     };
+    mainContent.addEventListener('dblclick', dblClickHandler);
     mainContent.addEventListener('dblclick', dblClickHandler);
 
     cameraToggleButton.addEventListener('click', async () => {
