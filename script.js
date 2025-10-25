@@ -453,6 +453,8 @@ activeConnection.style.boxShadow = `0 0 20px 10px #FFFFE0`;
         currentDotColor = e.target.value;
         document.documentElement.style.setProperty('--dot-color', currentDotColor);
         updateDotProperties();
+        currentLineColor = currentDotColor;
+        lineColorInput.value = currentDotColor;
     });
 
     followSpeedInput.addEventListener('input', (e) => {
