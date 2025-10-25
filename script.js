@@ -387,9 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clickedDot.style.boxShadow = '0 0 10px 5px #FFFF99'; // Highlight new active dot with paler yellow
 
             checkConnectionCompletion();
-        }
-    }
-
     function resetConnectMode(success = false) {
         dots.forEach(dot => {
             dot.style.boxShadow = 'none'; 
