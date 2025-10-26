@@ -436,11 +436,14 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
     });
 
     snapshotBtn.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.display = 'none';
         html2canvas(document.body).then(canvas => {
             const link = document.createElement('a');
             link.download = 'dotted-snapshot.png';
             link.href = canvas.toDataURL();
             link.click();
+            sidebar.style.display = 'flex';
         });
     });
 
