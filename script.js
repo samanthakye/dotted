@@ -461,13 +461,12 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
     });
 
     sidebarArrowBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar-closed');
-        if (sidebar.classList.contains('sidebar-closed')) {
+        const container = document.getElementById('container');
+        container.classList.toggle('sidebar-closed');
+        if (container.classList.contains('sidebar-closed')) {
             sidebarArrowBtn.innerHTML = '&rarr;';
-            sidebarArrowBtn.style.left = '-20px';
         } else {
             sidebarArrowBtn.innerHTML = '&larr;';
-            sidebarArrowBtn.style.left = '260px';
         }
     });
 

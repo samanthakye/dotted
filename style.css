@@ -26,18 +26,26 @@ body, html {
 }
 
 #container {
-    display: flex;
+    position: relative;
     height: 100%;
     width: 100%;
     background-image: var(--bg-image);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+#content-wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    transition: transform 0.3s ease;
 }
 
 #sidebar {
-    position: relative;
     width: 280px;
+    flex-shrink: 0;
     background-color: var(--sidebar-bg);
     border-right: 2px solid var(--border-color);
     padding: 20px;
@@ -48,19 +56,16 @@ body, html {
     font-size: 14px;
     color: var(--text-color);
     overflow-y: auto;
-    transition: width 0.3s ease, padding 0.3s ease;
 }
 
-.sidebar-closed {
-    width: 0;
-    padding: 0;
-    border-right: none;
+.sidebar-closed #sidebar {
+    margin-left: -280px;
 }
 
 #sidebar-arrow-btn {
     position: absolute;
     top: 50%;
-    left: 260px;
+    left: 280px;
     transform: translateY(-50%);
     z-index: 1001;
     background-color: rgba(255, 255, 255, 0.8);
@@ -74,6 +79,10 @@ body, html {
     justify-content: center;
     align-items: center;
     transition: left 0.3s ease;
+}
+
+.sidebar-closed #sidebar-arrow-btn {
+    left: 0;
 }
 
 
