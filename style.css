@@ -56,6 +56,7 @@ body, html {
     font-size: 14px;
     color: var(--text-color);
     overflow-y: auto;
+    box-sizing: border-box;
 }
 
 .sidebar-closed #content-wrapper {
