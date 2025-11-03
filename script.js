@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const slideshowToggle = document.getElementById('slideshowToggle');
     const defaultBackgrounds = document.getElementById('defaultBackgrounds');
     const snapshotBtn = document.getElementById('snapshot-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
 
     let dots = [];
     let mouseX = 0;
@@ -445,6 +446,16 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             link.click();
             sidebar.style.display = 'flex';
         });
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     });
 
     dotSizeInput.addEventListener('input', (e) => {
