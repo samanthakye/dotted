@@ -58,8 +58,8 @@ body, html {
     overflow-y: auto;
 }
 
-.sidebar-closed #sidebar {
-    margin-left: -280px;
+.sidebar-closed #content-wrapper {
+    transform: translateX(-280px);
 }
 
 #sidebar-arrow-btn {
@@ -82,7 +82,7 @@ body, html {
 }
 
 .sidebar-closed #sidebar-arrow-btn {
-    left: 0;
+    left: 10px;
 }
 
 
