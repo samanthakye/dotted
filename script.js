@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultBackgrounds = document.getElementById('defaultBackgrounds');
     const snapshotBtn = document.getElementById('snapshot-btn');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
 
     let dots = [];
     let mouseX = 0;
@@ -531,5 +533,14 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
     handpose.load().then(loadedModel => {
         model = loadedModel;
         cameraToggleButton.disabled = false;
+    });
+
+    sidebarToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-closed');
+        if (sidebar.classList.contains('sidebar-closed')) {
+            sidebarToggleBtn.style.left = '20px';
+        } else {
+            sidebarToggleBtn.style.left = '300px';
+        }
     });
 });
