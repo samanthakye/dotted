@@ -464,10 +464,8 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         sidebar.classList.toggle('sidebar-closed');
         if (sidebar.classList.contains('sidebar-closed')) {
             sidebarArrowBtn.innerHTML = '&rarr;';
-            sidebarArrowBtn.style.left = '20px';
         } else {
             sidebarArrowBtn.innerHTML = '&larr;';
-            sidebarArrowBtn.style.left = '300px';
         }
     });
 

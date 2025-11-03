@@ -47,11 +47,9 @@ body, html {
     gap: 15px;
     font-size: 14px;
     color: var(--text-color);
-    overflow-y: auto;
+    overflow: visible;
     transition: width 0.3s ease, padding 0.3s ease;
 }
-
-
 
 .sidebar-closed {
     width: 0;
@@ -62,7 +60,7 @@ body, html {
 #sidebar-arrow-btn {
     position: absolute;
     top: 50%;
-    left: 300px;
+    right: -20px;
     transform: translateY(-50%);
     z-index: 1001;
     background-color: rgba(255, 255, 255, 0.8);
@@ -75,7 +73,11 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: left 0.3s ease;
+    transition: right 0.3s ease;
+}
+
+.sidebar-closed #sidebar-arrow-btn {
+    right: -40px;
 }
 
 
