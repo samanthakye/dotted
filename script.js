@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const snapshotBtn = document.getElementById('snapshot-btn');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
 
     let dots = [];
     let mouseX = 0;
@@ -460,6 +460,17 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         }
     });
 
+    sidebarArrowBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-closed');
+        if (sidebar.classList.contains('sidebar-closed')) {
+            sidebarArrowBtn.innerHTML = '&rarr;';
+            sidebarArrowBtn.style.left = '20px';
+        } else {
+            sidebarArrowBtn.innerHTML = '&larr;';
+            sidebarArrowBtn.style.left = '300px';
+        }
+    });
+
     dotSizeInput.addEventListener('input', (e) => {
         currentDotSize = parseInt(e.target.value);
         dotSizeValueSpan.textContent = `${currentDotSize}px`;
@@ -535,12 +546,5 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         cameraToggleButton.disabled = false;
     });
 
-    sidebarToggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar-closed');
-        if (sidebar.classList.contains('sidebar-closed')) {
-            sidebarToggleBtn.style.left = '20px';
-        } else {
-            sidebarToggleBtn.style.left = '300px';
-        }
-    });
+
 });
