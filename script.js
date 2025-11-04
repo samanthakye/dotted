@@ -2,22 +2,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.getElementById('main-content');
     const dotSizeInput = document.getElementById('dotSize');
     const dotSizeValueSpan = document.getElementById('dotSizeValue');
-    const dotColorInput = document.getElementById('dotColor');
-    const followSpeedInput = document.getElementById('followSpeed');
-    const followSpeedValueSpan = document.getElementById('followSpeedValue');
     const numDotsInput = document.getElementById('numDots');
     const numDotsValueSpan = document.getElementById('numDotsValue');
-    const lineThicknessInput = document.getElementById('lineThickness');
-    const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
-    const lineColorInput = document.getElementById('lineColor');
-    const imageToggleButton = document.getElementById('imageToggleButton');
     const interactiveModeButton = document.getElementById('interactiveModeButton');
     const webcamFeed = document.getElementById('webcamFeed');
     const handCanvas = document.getElementById('handCanvas');
     const handCtx = handCanvas.getContext('2d');
-    const backgroundImageUpload = document.getElementById('backgroundImageUpload');
-    const slideshowToggle = document.getElementById('slideshowToggle');
-    const defaultBackgrounds = document.getElementById('defaultBackgrounds');
     const snapshotBtn = document.getElementById('snapshot-btn');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
@@ -29,11 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastHandX = 0;
     
     let currentDotSize = parseInt(dotSizeInput.value);
-    let currentDotColor = dotColorInput.value;
-    let currentFollowSpeed = parseFloat(followSpeedInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
-    let currentLineThickness = parseFloat(lineThicknessInput.value);
-    let currentLineColor = lineColorInput.value;
 
     let isCameraMode = true;
     let model = null;
@@ -58,69 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         webcamFeed.style.display = 'block';
         handCanvas.style.display = 'block';
-        document.getElementById('container').style.backgroundImage = 'none';
         mainContent.removeEventListener('mousemove', mouseMoveHandler);
         mainContent.removeEventListener('dblclick', dblClickHandler);
-        stopSlideshow();
         resetConnectMode(false);
         currentFollowSpeed = 0.5;
         await setupInteractiveMode();
         animateHand();
     });
 
-    imageToggleButton.addEventListener('click', () => {
-        isCameraMode = false;
-
-        if (webcamFeed.srcObject) {
-            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
-        }
-        cancelAnimationFrame(handAnimationRequest);
-        webcamFeed.style.display = 'none';
-        handCanvas.style.display = 'none';
-
-        if (audioSource) {
-            audioSource.disconnect();
-            audioSource = null;
-        }
-        if (audioContext) {
-            audioContext.close();
-            audioContext = null;
-        }
-
-        changeBackground(backgroundImages[currentBgIndex]);
-        mainContent.addEventListener('mousemove', mouseMoveHandler);
-        mainContent.addEventListener('dblclick', dblClickHandler);
-        if (slideshowToggle.checked) {
-            startSlideshow();
-        }
-        currentFollowSpeed = parseFloat(followSpeedInput.value);
-        animateDots();
-    });
-
     let isScattered = false;
     let isConnectMode = false;
     let activeConnection = null;
     let dotConnections = {};
-
-    const floatIntensity = 0.005;
-    const maxFloatDistance = 5;
-    const scatterTransition = 'all 0.5s ease-out';
-
-    const backgroundImages = [
-        'fall.JPG',
-        'cat.JPG',
-        'beach.jpeg',
-        'houses.jpg',
-        'kusama.JPG',
-        'museum.jpeg',
-        'park.JPG',
-        'sashimi.JPG',
-        'studio.JPG',
-        'trees.JPG',
-        'water.JPG'
-    ];
-    let currentBgIndex = 0;
-    let slideshowInterval = null;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'dot-connections-svg';
@@ -152,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dots.forEach(dot => {
             dot.style.width = `${currentDotSize}px`;
             dot.style.height = `${currentDotSize}px`;
-            dot.style.backgroundColor = currentDotColor;
         });
     }
 
@@ -164,45 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isConnectMode) {
             drawConnectionLines();
         }
-    }
-
-    function animateDots() {
-        if (isCameraMode) return;
-
-        if (!isScattered) { 
-            let targetX = mouseX;
-            let targetY = mouseY;
-
-            dots.forEach((dot, index) => {
-                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-                const dx = targetX - currentX;
-                const dy = targetY - currentY;
-
-                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-
-                targetX = parseFloat(dot.style.left) + currentDotSize / 2;
-                targetY = parseFloat(dot.style.top) + currentDotSize / 2;
-            });
-        } else {
-            const time = Date.now() * floatIntensity;
-
-            dots.forEach((dot, index) => {
-                let currentX = parseFloat(dot.style.left);
-                let currentY = parseFloat(dot.style.top);
-
-                const floatX = Math.sin(time + index) * maxFloatDistance;
-                const floatY = Math.cos(time + index) * maxFloatDistance;
-                
-                dot.style.left = `${currentX + floatX * 0.01}px`; 
-                dot.style.top = `${currentY + floatY * 0.01}px`;
-            });
-        }
-
-        drawLines();
-        requestAnimationFrame(animateDots);
     }
 
     async function setupInteractiveMode() {
@@ -350,23 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
-    function changeBackground(image) {
-        document.getElementById('container').style.backgroundImage = `url('${image}')`;
-    }
-
-    function startSlideshow() {
-        if (slideshowInterval) clearInterval(slideshowInterval);
-        slideshowInterval = setInterval(() => {
-            currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
-            changeBackground(backgroundImages[currentBgIndex]);
-        }, 5000);
-    }
-
-    function stopSlideshow() {
-        clearInterval(slideshowInterval);
-        slideshowInterval = null;
-    }
-
     const mouseMoveHandler = (e) => {
         const rect = mainContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left - currentDotSize / 2; 
@@ -472,7 +350,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
                 line.setAttribute('y1', y1);
                 line.setAttribute('x2', x2);
                 line.setAttribute('y2', y2);
-                line.setAttribute('stroke', currentLineColor);
                 line.setAttribute('stroke-width', currentLineThickness);
                 line.setAttribute('stroke-dasharray', '5, 5');
                 svg.appendChild(line);
@@ -526,14 +403,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         updateDotProperties();
     });
 
-    dotColorInput.addEventListener('input', (e) => {
-        currentDotColor = e.target.value;
-        document.documentElement.style.setProperty('--dot-color', currentDotColor);
-        updateDotProperties();
-        currentLineColor = currentDotColor;
-        lineColorInput.value = currentDotColor;
-    });
-
     followSpeedInput.addEventListener('input', (e) => {
         currentFollowSpeed = parseFloat(e.target.value);
         followSpeedValueSpan.textContent = e.target.value;
@@ -545,47 +414,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         initializeDots(currentNumDots);
     });
 
-    lineThicknessInput.addEventListener('input', (e) => {
-        currentLineThickness = parseFloat(e.target.value);
-        lineThicknessValueSpan.textContent = `${currentLineThickness}px`;
-    });
-
-    lineColorInput.addEventListener('input', (e) => {
-        currentLineColor = e.target.value;
-    });
-
-    backgroundImageUpload.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                changeBackground(event.target.result);
-                stopSlideshow();
-                slideshowToggle.checked = false;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    slideshowToggle.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            startSlideshow();
-        } else {
-            stopSlideshow();
-        }
-    });
-
-    defaultBackgrounds.addEventListener('change', (e) => {
-        const selectedBg = e.target.value;
-        if (selectedBg) {
-            currentBgIndex = backgroundImages.indexOf(selectedBg);
-            changeBackground(selectedBg);
-            stopSlideshow();
-            slideshowToggle.checked = false;
-        }
-    });
-
-    document.getElementById('container').style.backgroundImage = 'none';
     initializeDots(currentNumDots);
     setupInteractiveMode();
     animateHand();
