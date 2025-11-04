@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineThicknessInput = document.getElementById('lineThickness');
     const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
     const lineColorInput = document.getElementById('lineColor');
-    const cameraToggleButton = document.getElementById('cameraToggleButton');
+    const imageToggleButton = document.getElementById('imageToggleButton');
     const webcamFeed = document.getElementById('webcamFeed');
     const handCanvas = document.getElementById('handCanvas');
     const handCtx = handCanvas.getContext('2d');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLineThickness = parseFloat(lineThicknessInput.value);
     let currentLineColor = lineColorInput.value;
 
-    let isCameraMode = false;
+    let isCameraMode = true;
     let model = null;
     let handAnimationRequest = null;
 
@@ -403,7 +403,7 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         });
     }
 
-    cameraToggleButton.addEventListener('click', async () => {
+    imageToggleButton.addEventListener('click', async () => {
         if (!model) {
             alert('Handpose model not loaded yet. Please wait.');
             return;
@@ -536,13 +536,14 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         }
     });
 
+    document.getElementById('container').style.backgroundImage = 'none';
     initializeDots(currentNumDots);
-    animateDots();
-    startSlideshow();
+    setupCamera();
+    animateHand();
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
-        cameraToggleButton.disabled = false;
+        imageToggleButton.disabled = false;
     });
 
 

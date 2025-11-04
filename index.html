@@ -51,7 +51,7 @@
                     <button id="fullscreen-btn" class="snapshot-button">↔️ Fullscreen</button>
                 </div>
                 <div class="setting-group">
-                    <button id="cameraToggleButton" class="circular-button" disabled>👁️ Camera Mode</button>
+                    <button id="imageToggleButton" class="circular-button" disabled>🖼️ Image Mode</button>
                 </div>
                 <div class="setting-group">
                     <label for="backgroundImageUpload">Upload Background:</label>
@@ -83,8 +83,8 @@
             </aside>
 
             <main id="main-content">
-                <video id="webcamFeed" style="display: none;" autoplay playsinline></video>
-                <canvas id="handCanvas" style="display: none; position: absolute; top: 0; left: 0; z-index: 11;"></canvas>
+                <video id="webcamFeed" autoplay playsinline></video>
+                <canvas id="handCanvas" style="position: absolute; top: 0; left: 0; z-index: 11;"></canvas>
             </main>
         </div>
         <button id="sidebar-arrow-btn">&larr;</button>

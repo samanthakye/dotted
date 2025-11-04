@@ -2,7 +2,7 @@
 
 :root {
     /* Background Variables */
-    --bg-image: url('fall.JPG'); 
+    --bg-image: none; 
     --main-bg: #f0f0f0;
     
     /* Sidebar Theme (Translucent White) */
