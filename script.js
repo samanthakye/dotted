@@ -39,10 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let handAnimationRequest = null;
 
     let isPinching = false;
-    let grabbedDots = [];
 
-    let isPinching = false;
-    let grabbedDots = [];
 
     let audioContext = null;
     let analyser = null;
