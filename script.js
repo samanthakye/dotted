@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
 
-
     let dots = [];
     let mouseX = 0;
     let mouseY = 0;
@@ -194,8 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         drawLines();
         requestAnimationFrame(animateDots);
     }
-
-
 
     async function setupInteractiveMode() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -485,8 +482,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             }
         });
     }
-
-
 
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
