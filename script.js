@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
+    const perlinNoiseToggleButton = document.getElementById('perlinNoiseToggleButton');
+    const perlinZoom = document.getElementById('perlinZoom');
+    const perlinSpeed = document.getElementById('perlinSpeed');
+
+    let isPerlinNoiseMode = false;
 
     let dots = [];
     let mouseX = 0;

@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+    <script src="https://cdn.jsdelivr.net/gh/josephg/noisejs@1.0.0/perlin.js"></script>
 </head>
 <body>
     <div id="container">
@@ -53,6 +54,17 @@
                 <div class="setting-group">
                     <button id="interactiveModeButton" class="circular-button" disabled>👁️ Camera & 🎤 Audio Mode</button>
                     <button id="imageToggleButton" class="circular-button" disabled>🖼️ Image Mode</button>
+                    <button id="perlinNoiseToggleButton" class="circular-button">〰️ Perlin Noise Mode</button>
+                </div>
+                <div class="setting-group">
+                    <label for="perlinZoom">Perlin Zoom:</label>
+                    <input type="range" id="perlinZoom" min="0.01" max="0.1" step="0.01" value="0.05">
+                    <span id="perlinZoomValue">0.05</span>
+                </div>
+                <div class="setting-group">
+                    <label for="perlinSpeed">Perlin Speed:</label>
+                    <input type="range" id="perlinSpeed" min="1" max="10" value="5">
+                    <span id="perlinSpeedValue">5</span>
                 </div>
                 <div class="setting-group">
                     <label for="backgroundImageUpload">Upload Background:</label>
