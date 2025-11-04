@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineColorInput = document.getElementById('lineColor');
     const imageToggleButton = document.getElementById('imageToggleButton');
     const interactiveModeButton = document.getElementById('interactiveModeButton');
+    const perlinNoiseToggleButton = document.getElementById('perlinNoiseToggleButton');
+    const perlinZoomInput = document.getElementById('perlinZoom');
+    const perlinZoomValueSpan = document.getElementById('perlinZoomValue');
+    const perlinSpeedInput = document.getElementById('perlinSpeed');
+    const perlinSpeedValueSpan = document.getElementById('perlinSpeedValue');
     const webcamFeed = document.getElementById('webcamFeed');
     const handCanvas = document.getElementById('handCanvas');
     const handCtx = handCanvas.getContext('2d');
@@ -22,11 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
-    const perlinNoiseToggleButton = document.getElementById('perlinNoiseToggleButton');
-    const perlinZoom = document.getElementById('perlinZoom');
-    const perlinSpeed = document.getElementById('perlinSpeed');
-
-    let isPerlinNoiseMode = false;
 
     let dots = [];
     let mouseX = 0;
@@ -38,8 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
     let currentLineThickness = parseFloat(lineThicknessInput.value);
     let currentLineColor = lineColorInput.value;
+    let currentPerlinZoom = parseFloat(perlinZoomInput.value);
+    let currentPerlinSpeed = parseInt(perlinSpeedInput.value);
 
     let isCameraMode = true;
+    let isPerlinNoiseMode = false;
     let model = null;
     let handAnimationRequest = null;
 
@@ -47,12 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let analyser = null;
     let audioSource = null;
 
+    noise.seed(Math.random());
+
     interactiveModeButton.addEventListener('click', async () => {
         if (!model) {
             alert('Handpose model not loaded yet. Please wait.');
             return;
         }
         isCameraMode = true;
+        isPerlinNoiseMode = false;
 
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -74,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     imageToggleButton.addEventListener('click', () => {
         isCameraMode = false;
+        isPerlinNoiseMode = false;
 
         if (webcamFeed.srcObject) {
             webcamFeed.srcObject.getTracks().forEach(track => track.stop());
@@ -99,6 +106,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentFollowSpeed = parseFloat(followSpeedInput.value);
         animateDots();
+    });
+
+    perlinNoiseToggleButton.addEventListener('click', () => {
+        isCameraMode = false;
+        isPerlinNoiseMode = true;
+
+        if (webcamFeed.srcObject) {
+            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+        }
+        cancelAnimationFrame(handAnimationRequest);
+        webcamFeed.style.display = 'none';
+        handCanvas.style.display = 'none';
+
+        if (audioSource) {
+            audioSource.disconnect();
+            audioSource = null;
+        }
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        document.getElementById('container').style.backgroundImage = 'none';
+        mainContent.removeEventListener('mousemove', mouseMoveHandler);
+        mainContent.removeEventListener('dblclick', dblClickHandler);
+        stopSlideshow();
+        resetConnectMode(false);
+        animatePerlinNoise();
+    });
+
+    perlinZoomInput.addEventListener('input', (e) => {
+        currentPerlinZoom = parseFloat(e.target.value);
+        perlinZoomValueSpan.textContent = currentPerlinZoom;
+    });
+
+    perlinSpeedInput.addEventListener('input', (e) => {
+        currentPerlinSpeed = parseInt(e.target.value);
+        perlinSpeedValueSpan.textContent = currentPerlinSpeed;
     });
 
     let isScattered = false;
@@ -171,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateDots() {
-        if (isCameraMode) return;
+        if (isCameraMode || isPerlinNoiseMode) return;
 
         if (!isScattered) { 
             let targetX = mouseX;
@@ -207,6 +252,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         drawLines();
         requestAnimationFrame(animateDots);
+    }
+
+    function animatePerlinNoise() {
+        if (!isPerlinNoiseMode) return;
+
+        dots.forEach(dot => {
+            const x = parseFloat(dot.style.left);
+            const y = parseFloat(dot.style.top);
+
+            const angle = noise.perlin2(x * currentPerlinZoom, y * currentPerlinZoom) * Math.PI * 2;
+
+            const newX = x + Math.cos(angle) * currentPerlinSpeed;
+            const newY = y + Math.sin(angle) * currentPerlinSpeed;
+
+            if (newX > 0 && newX < mainContent.offsetWidth && newY > 0 && newY < mainContent.offsetHeight) {
+                dot.style.left = `${newX}px`;
+                dot.style.top = `${newY}px`;
+            } else {
+                dot.style.left = `${Math.random() * mainContent.offsetWidth}px`;
+                dot.style.top = `${Math.random() * mainContent.offsetHeight}px`;
+            }
+        });
+
+        requestAnimationFrame(animatePerlinNoise);
     }
 
     async function setupInteractiveMode() {
