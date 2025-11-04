@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
+    const followSpeedInput = document.getElementById('followSpeed');
 
     let dots = [];
     let mouseX = 0;
@@ -23,14 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDotColor = '#ffffff';
     let currentLineThickness = 1.5;
     let currentLineColor = '#ffffff';
+    let currentFollowSpeed = parseFloat(followSpeedInput.value);
 
-    let isCameraMode = true;
+    let isCameraMode = false;
     let model = null;
     let handAnimationRequest = null;
 
     let audioContext = null;
     let analyser = null;
     let audioSource = null;
+    const scatterTransition = 'left 0.5s ease, top 0.5s ease';
 
     interactiveModeButton.addEventListener('click', async () => {
         if (!model) {
@@ -418,14 +421,37 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         initializeDots(currentNumDots);
     });
 
+    function animate() {
+        if (!isScattered && !isCameraMode) {
+            let targetX = mouseX;
+            let targetY = mouseY;
+
+            dots.forEach((dot, index) => {
+                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                const dx = targetX - currentX;
+                const dy = targetY - currentY;
+
+                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                targetX = currentX;
+                targetY = currentY;
+            });
+        }
+        drawLines();
+        requestAnimationFrame(animate);
+    }
+
     initializeDots(currentNumDots);
-    setupInteractiveMode();
-    animateHand();
+    animate();
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
         interactiveModeButton.disabled = false;
     });
+
 
 
 });
