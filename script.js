@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
 
 
-    let dots = [[], []];
+    let dots = [];
     let mouseX = 0;
     let mouseY = 0;
     
@@ -116,12 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.id = 'dot-connections-svg';
     mainContent.appendChild(svg);
 
-    function createDot(handIndex) {
+    function createDot() {
         const dot = document.createElement('div');
         dot.classList.add('dot');
         dot.style.width = `${currentDotSize}px`;
         dot.style.height = `${currentDotSize}px`;
-        dot.style.backgroundColor = handIndex === 0 ? currentDotColor : '#0000ff';
+        dot.style.backgroundColor = currentDotColor;
         const rect = mainContent.getBoundingClientRect();
         dot.style.left = `${Math.random() * rect.width}px`;
         dot.style.top = `${Math.random() * rect.height}px`;
@@ -131,16 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initializeDots(count) {
-        dots.forEach(handDots => handDots.forEach(dot => dot.remove()));
-        dots = [[], []];
+        dots.forEach(dot => dot.remove());
+        dots = [];
         for (let i = 0; i < count; i++) {
-            dots[0].push(createDot(0));
-            dots[1].push(createDot(1));
+            dots.push(createDot());
         }
     }
 
     function updateDotProperties() {
-        dots.flat().forEach(dot => {
+        dots.forEach(dot => {
             dot.style.width = `${currentDotSize}px`;
             dot.style.height = `${currentDotSize}px`;
             dot.style.backgroundColor = currentDotColor;
@@ -164,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let targetX = mouseX;
             let targetY = mouseY;
 
-            dots[0].forEach((dot, index) => {
+            dots.forEach((dot, index) => {
                 const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
                 const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
 
@@ -180,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const time = Date.now() * floatIntensity;
 
-            dots.flat().forEach((dot, index) => {
+            dots.forEach((dot, index) => {
                 let currentX = parseFloat(dot.style.left);
                 let currentY = parseFloat(dot.style.top);
 
@@ -239,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const avg = (bass + mid + treble) / 3;
 
-            dots.flat().forEach((dot, index) => {
+            dots.forEach((dot, index) => {
                 const size = currentDotSize + (avg / 255) * 50;
                 dot.style.width = `${size}px`;
                 dot.style.height = `${size}px`;
@@ -255,61 +254,58 @@ document.addEventListener('DOMContentLoaded', () => {
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
 
         if (predictions.length > 0) {
-            predictions.forEach((prediction, handIndex) => {
-                if (handIndex >= 2) return;
-                const keypoints = prediction.landmarks;
+            const keypoints = predictions[0].landmarks;
 
-                if (isOpenHand(keypoints)) {
-                    if (!isScattered) {
-                        isScattered = true;
-                        const fullWidth = window.innerWidth;
-                        const fullHeight = window.innerHeight;
+            if (isOpenHand(keypoints)) {
+                if (!isScattered) {
+                    isScattered = true;
+                    const fullWidth = window.innerWidth;
+                    const fullHeight = window.innerHeight;
 
-                        dots[handIndex].forEach(dot => {
-                            dot.style.transition = scatterTransition;
-                            const randomX = Math.random() * fullWidth;
-                            const randomY = Math.random() * fullHeight;
-                            dot.style.left = `${randomX - currentDotSize / 2}px`;
-                            dot.style.top = `${randomY - currentDotSize / 2}px`;
-                            dot.style.transform = 'translateZ(0)';
-                        });
-
-                        setTimeout(() => {
-                            dots[handIndex].forEach(dot => {
-                                dot.style.transition = 'none';
-                            });
-                        }, 500);
-                    }
-                } else {
-                    if (isScattered) {
-                        isScattered = false;
-                        dots[handIndex].forEach(dot => {
-                            dot.style.transition = scatterTransition;
-                        });
-                        setTimeout(() => {
-                            dots[handIndex].forEach(dot => {
-                                dot.style.transition = 'none';
-                            });
-                        }, 500);
-                    }
-                    let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
-                    let targetY = keypoints[8][1] * 3;
-
-                    dots[handIndex].forEach((dot, index) => {
-                        const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                        const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-                        const dx = targetX - currentX;
-                        const dy = targetY - currentY;
-
-                        dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                        dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-
-                        targetX = parseFloat(dot.style.left) + currentDotSize / 2;
-                        targetY = parseFloat(dot.style.top) + currentDotSize / 2;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                        const randomX = Math.random() * fullWidth;
+                        const randomY = Math.random() * fullHeight;
+                        dot.style.left = `${randomX - currentDotSize / 2}px`;
+                        dot.style.top = `${randomY - currentDotSize / 2}px`;
+                        dot.style.transform = 'translateZ(0)';
                     });
+
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
                 }
-            });
+            } else {
+                if (isScattered) {
+                    isScattered = false;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+                let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
+                let targetY = keypoints[8][1] * 3;
+
+                dots.forEach((dot, index) => {
+                    const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                    const dx = targetX - currentX;
+                    const dy = targetY - currentY;
+
+                    dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                    dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                    targetX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dot.style.top) + currentDotSize / 2;
+                });
+            }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
     }
@@ -426,8 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (activeConnection) {
             if (activeConnection !== clickedDot) {
-                const dotId1 = dots[0].indexOf(activeConnection);
-                const dotId2 = dots[0].indexOf(clickedDot);
+                const dotId1 = dots.indexOf(activeConnection);
+                const dotId2 = dots.indexOf(clickedDot);
 
                 if (!dotConnections[dotId1]) {
                     dotConnections[dotId1] = [];
@@ -454,10 +450,10 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         Object.keys(dotConnections).forEach(dotId1 => {
             dotConnections[dotId1].forEach(dotId2 => {
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                const x1 = parseFloat(dots[0][dotId1].style.left) + currentDotSize / 2;
-                const y1 = parseFloat(dots[0][dotId1].style.top) + currentDotSize / 2;
-                const x2 = parseFloat(dots[0][dotId2].style.left) + currentDotSize / 2;
-                const y2 = parseFloat(dots[0][dotId2].style.top) + currentDotSize / 2;
+                const x1 = parseFloat(dots[dotId1].style.left) + currentDotSize / 2;
+                const y1 = parseFloat(dots[dotId1].style.top) + currentDotSize / 2;
+                const x2 = parseFloat(dots[dotId2].style.left) + currentDotSize / 2;
+                const y2 = parseFloat(dots[dotId2].style.top) + currentDotSize / 2;
 
                 line.setAttribute('x1', x1);
                 line.setAttribute('y1', y1);
@@ -481,7 +477,7 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             svg.removeChild(svg.firstChild);
         }
 
-        dots.flat().forEach(dot => {
+        dots.forEach(dot => {
             dot.style.boxShadow = 'none';
             dot.style.cursor = 'default';
             if (shouldAnimate) {
