@@ -10,123 +10,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineThicknessInput = document.getElementById('lineThickness');
     const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
     const lineColorInput = document.getElementById('lineColor');
-    const imageToggleButton = document.getElementById('imageToggleButton');
-    const interactiveModeButton = document.getElementById('interactiveModeButton');
-    /*
-    const perlinNoiseToggleButton = document.getElementById('perlinNoiseToggleButton');
-    const perlinZoomInput = document.getElementById('perlinZoom');
-    const perlinZoomValueSpan = document.getElementById('perlinZoomValue');
-    const perlinSpeedInput = document.getElementById('perlinSpeed');
-    const perlinSpeedValueSpan = document.getElementById('perlinSpeedValue');
-    */
+    const cameraToggleButton = document.getElementById('cameraToggleButton');
+    const webcamFeed = document.getElementById('webcamFeed');
+    const handCanvas = document.getElementById('handCanvas');
+    const handCtx = handCanvas.getContext('2d');
+    const backgroundImageUpload = document.getElementById('backgroundImageUpload');
+    const slideshowToggle = document.getElementById('slideshowToggle');
+    const defaultBackgrounds = document.getElementById('defaultBackgrounds');
+    const snapshotBtn = document.getElementById('snapshot-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
 
-    let isPerlinNoiseMode = false;
+    let dots = [];
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    let currentDotSize = parseInt(dotSizeInput.value);
+    let currentDotColor = dotColorInput.value;
+    let currentFollowSpeed = parseFloat(followSpeedInput.value);
+    let currentNumDots = parseInt(numDotsInput.value) || 25; 
+    let currentLineThickness = parseFloat(lineThicknessInput.value);
+    let currentLineColor = lineColorInput.value;
+
+    let isCameraMode = false;
     let model = null;
     let handAnimationRequest = null;
-
-    let audioContext = null;
-    let analyser = null;
-    let audioSource = null;
-
-    /*
-    noise.seed(Math.random());
-    */
-
-    interactiveModeButton.addEventListener('click', async () => {
-        if (!model) {
-            alert('Handpose model not loaded yet. Please wait.');
-            return;
-        }
-        isCameraMode = true;
-        isPerlinNoiseMode = false;
-
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-        }
-        audioContext.resume();
-
-        webcamFeed.style.display = 'block';
-        handCanvas.style.display = 'block';
-        document.getElementById('container').style.backgroundImage = 'none';
-        mainContent.removeEventListener('mousemove', mouseMoveHandler);
-        mainContent.removeEventListener('dblclick', dblClickHandler);
-        stopSlideshow();
-        resetConnectMode(false);
-        currentFollowSpeed = 0.5;
-        await setupInteractiveMode();
-        animateHand();
-    });
-
-    imageToggleButton.addEventListener('click', () => {
-        isCameraMode = false;
-        isPerlinNoiseMode = false;
-
-        if (webcamFeed.srcObject) {
-            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
-        }
-        cancelAnimationFrame(handAnimationRequest);
-        webcamFeed.style.display = 'none';
-        handCanvas.style.display = 'none';
-
-        if (audioSource) {
-            audioSource.disconnect();
-            audioSource = null;
-        }
-        if (audioContext) {
-            audioContext.close();
-            audioContext = null;
-        }
-
-        changeBackground(backgroundImages[currentBgIndex]);
-        mainContent.addEventListener('mousemove', mouseMoveHandler);
-        mainContent.addEventListener('dblclick', dblClickHandler);
-        if (slideshowToggle.checked) {
-            startSlideshow();
-        }
-        currentFollowSpeed = parseFloat(followSpeedInput.value);
-        animateDots();
-    });
-
-    /*
-    perlinNoiseToggleButton.addEventListener('click', () => {
-        isCameraMode = false;
-        isPerlinNoiseMode = true;
-
-        if (webcamFeed.srcObject) {
-            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
-        }
-        cancelAnimationFrame(handAnimationRequest);
-        webcamFeed.style.display = 'none';
-        handCanvas.style.display = 'none';
-
-        if (audioSource) {
-            audioSource.disconnect();
-            audioSource = null;
-        }
-        if (audioContext) {
-            audioContext.close();
-            audioContext = null;
-        }
-
-        document.getElementById('container').style.backgroundImage = 'none';
-        mainContent.removeEventListener('mousemove', mouseMoveHandler);
-        mainContent.removeEventListener('dblclick', dblClickHandler);
-        stopSlideshow();
-        resetConnectMode(false);
-        animatePerlinNoise();
-    });
-
-    perlinZoomInput.addEventListener('input', (e) => {
-        currentPerlinZoom = parseFloat(e.target.value);
-        perlinZoomValueSpan.textContent = currentPerlinZoom;
-    });
-
-    perlinSpeedInput.addEventListener('input', (e) => {
-        currentPerlinSpeed = parseInt(e.target.value);
-        perlinSpeedValueSpan.textContent = currentPerlinSpeed;
-    });
-    */
 
     let isScattered = false;
     let isConnectMode = false;
@@ -236,42 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animateDots);
     }
 
-    /*
-    function animatePerlinNoise() {
-        if (!isPerlinNoiseMode) return;
-
-        dots.forEach(dot => {
-            const x = parseFloat(dot.style.left);
-            const y = parseFloat(dot.style.top);
-
-            const angle = noise.perlin2(x * currentPerlinZoom, y * currentPerlinZoom) * Math.PI * 2;
-
-            const newX = x + Math.cos(angle) * currentPerlinSpeed;
-            const newY = y + Math.sin(angle) * currentPerlinSpeed;
-
-            if (newX > 0 && newX < mainContent.offsetWidth && newY > 0 && newY < mainContent.offsetHeight) {
-                dot.style.left = `${newX}px`;
-                dot.style.top = `${newY}px`;
-            } else {
-                dot.style.left = `${Math.random() * mainContent.offsetWidth}px`;
-                dot.style.top = `${Math.random() * mainContent.offsetHeight}px`;
-            }
-        });
-
-        requestAnimationFrame(animatePerlinNoise);
-    }
-    */
-
-    async function setupInteractiveMode() {
+    async function setupCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            throw new Error('Webcam and audio API not available');
+            throw new Error('Webcam API not available');
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         webcamFeed.srcObject = stream;
-
-        audioSource = audioContext.createMediaStreamSource(stream);
-        audioSource.connect(analyser);
 
         return new Promise((resolve) => {
             webcamFeed.onloadedmetadata = () => {
@@ -286,30 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function animateHand() {
         if (!isCameraMode || !model) return;
-
-        if (analyser) {
-            analyser.fftSize = 256;
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteFrequencyData(dataArray);
-
-            const bass = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
-            const mid = dataArray.slice(10, 40).reduce((a, b) => a + b, 0) / 30;
-            const treble = dataArray.slice(40, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 40);
-
-            const avg = (bass + mid + treble) / 3;
-
-            dots.forEach((dot, index) => {
-                const size = currentDotSize + (avg / 255) * 50;
-                dot.style.width = `${size}px`;
-                dot.style.height = `${size}px`;
-
-                const r = Math.floor(bass);
-                const g = Math.floor(mid);
-                const b = Math.floor(treble);
-                dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            });
-        }
 
         const predictions = await model.estimateHands(webcamFeed);
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
@@ -547,6 +401,53 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         });
     }
 
+    cameraToggleButton.addEventListener('click', async () => {
+        if (!model) {
+            alert('Handpose model not loaded yet. Please wait.');
+            return;
+        }
+        isCameraMode = !isCameraMode;
+        if (isCameraMode) {
+            webcamFeed.style.display = 'block';
+            handCanvas.style.display = 'block';
+            document.getElementById('container').style.backgroundImage = 'none';
+            mainContent.removeEventListener('mousemove', mouseMoveHandler);
+            mainContent.removeEventListener('dblclick', dblClickHandler);
+            stopSlideshow();
+            resetConnectMode(false);
+            currentFollowSpeed = 0.5;
+            await setupCamera();
+            animateHand();
+        } else {
+            webcamFeed.style.display = 'none';
+            handCanvas.style.display = 'none';
+            changeBackground(backgroundImages[currentBgIndex]);
+            mainContent.addEventListener('mousemove', mouseMoveHandler);
+            mainContent.addEventListener('dblclick', dblClickHandler);
+            if (slideshowToggle.checked) {
+                startSlideshow();
+            }
+            cancelAnimationFrame(handAnimationRequest);
+            if (webcamFeed.srcObject) {
+                webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+            }
+            currentFollowSpeed = parseFloat(followSpeedInput.value);
+            animateDots();
+        }
+    });
+
+    snapshotBtn.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.display = 'none';
+        html2canvas(document.body).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'dotted-snapshot.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            sidebar.style.display = 'flex';
+        });
+    });
+
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
@@ -554,16 +455,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
-        }
-    });
-
-    sidebarArrowBtn.addEventListener('click', () => {
-        const container = document.getElementById('container');
-        container.classList.toggle('sidebar-closed');
-        if (container.classList.contains('sidebar-closed')) {
-            sidebarArrowBtn.innerHTML = '&rarr;';
-        } else {
-            sidebarArrowBtn.innerHTML = '&larr;';
         }
     });
 
@@ -633,16 +524,12 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         }
     });
 
-    document.getElementById('container').style.backgroundImage = 'none';
     initializeDots(currentNumDots);
-    setupInteractiveMode();
-    animateHand();
+    animateDots();
+    startSlideshow();
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
-        imageToggleButton.disabled = false;
-        interactiveModeButton.disabled = false;
+        cameraToggleButton.disabled = false;
     });
-
-
 });

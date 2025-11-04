@@ -10,97 +10,82 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
-    <script src="https://cdn.jsdelivr.net/gh/josephg/noisejs@1.0.0/perlin.js"></script>
 </head>
 <body>
     <div id="container">
-        <div id="content-wrapper">
-            <aside id="sidebar">
-                <h2>dotted.</h2>
-                <div class="setting-group">
-                    <label for="dotSize">Dot Size:</label>
-                    <input type="range" id="dotSize" min="5" max="50" value="25">
-                    <span id="dotSizeValue">25px</span>
-                </div>
-                <div class="setting-group">
-                    <label for="dotColor">Dot Color:</label>
-                    <input type="color" id="dotColor" value="#ffffff">
-                </div>
-                <div class="setting-group">
-                    <label for="numDots">Number of Dots:</label>
-                    <input type="range" id="numDots" min="1" max="100" value="25">
-                    <span id="numDotsValue">25</span>
-                </div>
-                <div class="setting-group">
-                    <label for="followSpeed">Follow Speed:</label>
-                    <input type="range" id="followSpeed" min="0.05" max="0.5" step="0.01" value="0.1">
-                    <span id="followSpeedValue">0.1</span>
-                </div>
-                <div class="setting-group">
-                    <label for="lineThickness">Line Thickness:</label>
-                    <input type="range" id="lineThickness" min="1" max="10" value="1.5" step="0.5">
-                    <span id="lineThicknessValue">1.5px</span>
-                </div>
-                <div class="setting-group">
-                    <label for="lineColor">Line Color:</label>
-                    <input type="color" id="lineColor" value="#ffffff">
-                </div>
-                <div class="setting-group">
-                    <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
-                </div>
-                <div class="setting-group">
-                    <button id="fullscreen-btn" class="snapshot-button">↔️ Fullscreen</button>
-                </div>
-                <div class="setting-group">
-                    <button id="interactiveModeButton" class="circular-button" disabled>👁️ Camera & 🎤 Audio Mode</button>
-                    <button id="imageToggleButton" class="circular-button" disabled>🖼️ Image Mode</button>
-                    <button id="perlinNoiseToggleButton" class="circular-button">〰️ Perlin Noise Mode</button>
-                </div>
-                <div class="setting-group">
-                    <label for="perlinZoom">Perlin Zoom:</label>
-                    <input type="range" id="perlinZoom" min="0.01" max="0.1" step="0.01" value="0.05">
-                    <span id="perlinZoomValue">0.05</span>
-                </div>
-                <div class="setting-group">
-                    <label for="perlinSpeed">Perlin Speed:</label>
-                    <input type="range" id="perlinSpeed" min="1" max="10" value="5">
-                    <span id="perlinSpeedValue">5</span>
-                </div>
-                <div class="setting-group">
-                    <label for="backgroundImageUpload">Upload Background:</label>
-                    <input type="file" id="backgroundImageUpload" accept="image/*">
-                </div>
-                 <div class="setting-group">
-                    <label for="slideshowToggle">
-                    <input type="checkbox" id="slideshowToggle" checked> 
-                    Enable Background Slideshow
-                    </label>
-                </div>
-                <div class="setting-group">
-                    <label for="defaultBackgrounds">Default Backgrounds:</label>
-                    <select id="defaultBackgrounds">
-                        <option value="" disabled selected>Select a Background...</option>
-                        <option value="fall.JPG">BG 1 - Fall</option>
-                        <option value="cat.JPG">BG 2 - Cat</option>
-                        <option value="beach.jpeg">BG 3 - Beach</option>
-                        <option value="houses.jpg">BG 4 - Houses</option>
-                        <option value="kusama.JPG">BG 5 - kusama</option>
-                        <option value="museum.jpeg">BG 6 - museum</option>
-                        <option value="park.JPG">BG 7 - park</option>
-                        <option value="sashimi.JPG">BG 8 - sashimi</option>
-                        <option value="studio.JPG">BG 9 - studio</option>
-                        <option value="trees.JPG">BG 10 - trees</option>
-                        <option value="water.JPG">BG 11 - water</option>
-                    </select>
-                </div>
-            </aside>
+        <aside id="sidebar">
+            <h2>dotted.</h2>
+            <div class="setting-group">
+                <label for="dotSize">Dot Size:</label>
+                <input type="range" id="dotSize" min="5" max="50" value="25">
+                <span id="dotSizeValue">25px</span>
+            </div>
+            <div class="setting-group">
+                <label for="dotColor">Dot Color:</label>
+                <input type="color" id="dotColor" value="#ffffff">
+            </div>
+            <div class="setting-group">
+                <label for="numDots">Number of Dots:</label>
+                <input type="range" id="numDots" min="1" max="100" value="25">
+                <span id="numDotsValue">25</span>
+            </div>
+            <div class="setting-group">
+                <label for="followSpeed">Follow Speed:</label>
+                <input type="range" id="followSpeed" min="0.05" max="0.5" step="0.01" value="0.1">
+                <span id="followSpeedValue">0.1</span>
+            </div>
+            <div class="setting-group">
+                <label for="lineThickness">Line Thickness:</label>
+                <input type="range" id="lineThickness" min="1" max="10" value="1.5" step="0.5">
+                <span id="lineThicknessValue">1.5px</span>
+            </div>
+            <div class="setting-group">
+                <label for="lineColor">Line Color:</label>
+                <input type="color" id="lineColor" value="#ffffff">
+            </div>
+            <div class="setting-group">
+                <button id="snapshot-btn" class="snapshot-button">📷 Capture Screen</button>
+            </div>
+            <div class="setting-group">
+                <button id="fullscreen-btn" class="snapshot-button">↔️ Fullscreen</button>
+            </div>
+            <div class="setting-group">
+                <button id="cameraToggleButton" class="circular-button" disabled>👁️ Camera Mode</button>
+            </div>
+            <div class="setting-group">
+                <label for="backgroundImageUpload">Upload Background:</label>
+                <input type="file" id="backgroundImageUpload" accept="image/*">
+            </div>
+             <div class="setting-group">
+                <label for="slideshowToggle">
+                <input type="checkbox" id="slideshowToggle" checked> 
+                Enable Background Slideshow
+                </label>
+            </div>
+            <div class="setting-group">
+                <label for="defaultBackgrounds">Default Backgrounds:</label>
+                <select id="defaultBackgrounds">
+                    <option value="" disabled selected>Select a Background...</option>
+                    <option value="fall.JPG">BG 1 - Fall</option>
+                    <option value="cat.JPG">BG 2 - Cat</option>
+                    <option value="beach.jpeg">BG 3 - Beach</option>
+                    <option value="houses.jpg">BG 4 - Houses</option>
+                    <option value="kusama.JPG">BG 5 - kusama</option>
+                    <option value="museum.jpeg">BG 6 - museum</option>
+                    <option value="park.JPG">BG 7 - park</option>
+                    <option value="sashimi.JPG">BG 8 - sashimi</option>
+                    <option value="studio.JPG">BG 9 - studio</option>
+                    <option value="trees.JPG">BG 10 - trees</option>
+                    <option value="water.JPG">BG 11 - water</option>
+                </select>
+            </div>
+        </aside>
 
-            <main id="main-content">
-                <video id="webcamFeed" autoplay playsinline></video>
-                <canvas id="handCanvas" style="position: absolute; top: 0; left: 0; z-index: 11;"></canvas>
-            </main>
-        </div>
-        <button id="sidebar-arrow-btn">&larr;</button>
+        <main id="main-content">
+            <video id="webcamFeed" style="display: none;" autoplay playsinline></video>
+            <canvas id="handCanvas" style="display: none; position: absolute; top: 0; left: 0; z-index: 11;"></canvas>
+        </main>
+            
     </div>
 
     <script src="script.js"></script>
