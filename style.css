@@ -60,6 +60,7 @@ body, html {
 }
 
 .sidebar-closed #content-wrapper {
+    width: calc(100% + 280px);
     transform: translateX(-280px);
 }
 
