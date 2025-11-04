@@ -38,9 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let model = null;
     let handAnimationRequest = null;
 
-    let isPinching = false;
-
-
     let audioContext = null;
     let analyser = null;
     let audioSource = null;
@@ -255,104 +252,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (predictions.length > 0) {
             const keypoints = predictions[0].landmarks;
-            const thumbTip = keypoints[4];
-            const indexTip = keypoints[8];
 
-            if (isPinching(thumbTip, indexTip)) {
-                if (!isPinching) { // Pinch started
-                    isPinching = true;
-                    const pinchX = (webcamFeed.videoWidth - (thumbTip[0] + indexTip[0]) / 2) * 3;
-                    const pinchY = ((thumbTip[1] + indexTip[1]) / 2) * 3;
-                    grabbedDots = dots.filter(dot => {
-                        const dotX = parseFloat(dot.style.left);
-                        const dotY = parseFloat(dot.style.top);
-                        const distance = Math.sqrt(Math.pow(pinchX - dotX, 2) + Math.pow(pinchY - dotY, 2));
-                        return distance < 50; // Grab radius
+            if (isOpenHand(keypoints)) {
+                if (!isScattered) {
+                    isScattered = true;
+                    const fullWidth = window.innerWidth;
+                    const fullHeight = window.innerHeight;
+
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                        const randomX = Math.random() * fullWidth;
+                        const randomY = Math.random() * fullHeight;
+                        dot.style.left = `${randomX - currentDotSize / 2}px`;
+                        dot.style.top = `${randomY - currentDotSize / 2}px`;
+                        dot.style.transform = 'translateZ(0)';
                     });
-                    grabbedDots.forEach(dot => {
-                        dot.style.backgroundColor = 'red'; // Visual feedback
-                    });
+
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
                 }
+            } else {
+                if (isScattered) {
+                    isScattered = false;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                }
+                let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
+                let targetY = keypoints[8][1] * 3;
 
-                // Move grabbed dots
-                const pinchX = (webcamFeed.videoWidth - (thumbTip[0] + indexTip[0]) / 2) * 3;
-                const pinchY = ((thumbTip[1] + indexTip[1]) / 2) * 3;
-                grabbedDots.forEach(dot => {
-                    dot.style.left = `${pinchX}px`;
-                    dot.style.top = `${pinchY}px`;
+                dots.forEach((dot, index) => {
+                    const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+
+                    const dx = targetX - currentX;
+                    const dy = targetY - currentY;
+
+                    dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
+                    dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
+
+                    targetX = parseFloat(dot.style.left) + currentDotSize / 2;
+                    targetY = parseFloat(dot.style.top) + currentDotSize / 2;
                 });
-
-            } else { // Not pinching
-                if (isPinching) { // Pinch ended
-                    isPinching = false;
-                    grabbedDots.forEach(dot => {
-                        dot.style.backgroundColor = currentDotColor; // Reset color
-                    });
-                    grabbedDots = [];
-                }
-
-                const nonGrabbedDots = dots.filter(dot => !grabbedDots.includes(dot));
-                if (isOpenHand(keypoints)) {
-                    if (!isScattered) {
-                        isScattered = true;
-                        const fullWidth = window.innerWidth;
-                        const fullHeight = window.innerHeight;
-
-                        nonGrabbedDots.forEach(dot => {
-                            dot.style.transition = scatterTransition;
-                            const randomX = Math.random() * fullWidth;
-                            const randomY = Math.random() * fullHeight;
-                            dot.style.left = `${randomX - currentDotSize / 2}px`;
-                            dot.style.top = `${randomY - currentDotSize / 2}px`;
-                            dot.style.transform = 'translateZ(0)';
-                        });
-
-                        setTimeout(() => {
-                            nonGrabbedDots.forEach(dot => {
-                                dot.style.transition = 'none';
-                            });
-                        }, 500);
-                    }
-                } else {
-                    if (isScattered) {
-                        isScattered = false;
-                        nonGrabbedDots.forEach(dot => {
-                            dot.style.transition = scatterTransition;
-                        });
-                        setTimeout(() => {
-                            nonGrabbedDots.forEach(dot => {
-                                dot.style.transition = 'none';
-                            });
-                        }, 500);
-                    }
-                    let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
-                    let targetY = keypoints[8][1] * 3;
-
-                    nonGrabbedDots.forEach((dot, index) => {
-                        const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                        const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
-
-                        const dx = targetX - currentX;
-                        const dy = targetY - currentY;
-
-                        dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                        dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-
-                        targetX = parseFloat(dot.style.left) + currentDotSize / 2;
-                        targetY = parseFloat(dot.style.top) + currentDotSize / 2;
-                    });
-                }
             }
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
-    }
-
-    function isPinching(thumbTip, indexTip) {
-        const distance = Math.sqrt(
-            Math.pow(thumbTip[0] - indexTip[0], 2) +
-            Math.pow(thumbTip[1] - indexTip[1], 2)
-        );
-        return distance < 30; // Pinch threshold
     }
 
     function isOpenHand(keypoints) {
