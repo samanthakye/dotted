@@ -49,6 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         isCameraMode = true;
 
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+        }
+        audioContext.resume();
+
         webcamFeed.style.display = 'block';
         handCanvas.style.display = 'block';
         document.getElementById('container').style.backgroundImage = 'none';
@@ -74,6 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (audioSource) {
             audioSource.disconnect();
             audioSource = null;
+        }
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
         }
 
         changeBackground(backgroundImages[currentBgIndex]);
@@ -202,12 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         webcamFeed.srcObject = stream;
 
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            audioSource = audioContext.createMediaStreamSource(stream);
-            audioSource.connect(analyser);
-        }
+        audioSource = audioContext.createMediaStreamSource(stream);
+        audioSource.connect(analyser);
 
         return new Promise((resolve) => {
             webcamFeed.onloadedmetadata = () => {
