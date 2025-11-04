@@ -582,8 +582,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
 
     handpose.load().then(loadedModel => {
         model = loadedModel;
-        imageToggleButton.disabled = false;
-        interactiveModeButton.disabled = false;
     });
 
 
