@@ -114,6 +114,10 @@ body, html {
     color: var(--text-color);
 }
 
+.sidebar-closed #main-content {
+    width: 100vw;
+}
+
 #main-content {
     flex-grow: 1;
     position: relative;
