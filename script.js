@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
+    let currentDotColor = '#ffffff';
+    let currentLineThickness = 1.5;
+    let currentLineColor = '#ffffff';
 
     let isCameraMode = true;
     let model = null;
@@ -350,6 +353,7 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
                 line.setAttribute('y1', y1);
                 line.setAttribute('x2', x2);
                 line.setAttribute('y2', y2);
+                line.setAttribute('stroke', currentLineColor);
                 line.setAttribute('stroke-width', currentLineThickness);
                 line.setAttribute('stroke-dasharray', '5, 5');
                 svg.appendChild(line);
