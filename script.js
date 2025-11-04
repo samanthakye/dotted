@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dots = [];
     let mouseX = 0;
     let mouseY = 0;
+    let lastHandX = 0;
     
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentDotColor = dotColorInput.value;
@@ -258,6 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (predictions.length > 0) {
             const keypoints = predictions[0].landmarks;
+            const palmBase = keypoints[0];
+            const currentHandX = palmBase[0];
 
             if (isOpenHand(keypoints)) {
                 if (!isScattered) {
@@ -279,6 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             dot.style.transition = 'none';
                         });
                     }, 500);
+                } else {
+                    const handDeltaX = lastHandX ? currentHandX - lastHandX : 0;
+                    dots.forEach(dot => {
+                        const currentX = parseFloat(dot.style.left);
+                        dot.style.left = `${currentX - handDeltaX}px`;
+                    });
                 }
             } else {
                 if (isScattered) {
@@ -309,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetY = parseFloat(dot.style.top) + currentDotSize / 2;
                 });
             }
+            lastHandX = currentHandX;
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
     }
