@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineThicknessValueSpan = document.getElementById('lineThicknessValue');
     const lineColorInput = document.getElementById('lineColor');
     const imageToggleButton = document.getElementById('imageToggleButton');
+    const cameraToggleButton = document.getElementById('cameraToggleButton');
     const webcamFeed = document.getElementById('webcamFeed');
     const handCanvas = document.getElementById('handCanvas');
     const handCtx = handCanvas.getContext('2d');
@@ -21,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
+    const audioToggleButton = document.getElementById('audioToggleButton');
+
+    let audioContext = null;
+    let analyser = null;
+    let audioSource = null;
+    let isAudioMode = false;
 
     let dots = [];
     let mouseX = 0;
@@ -107,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateDots() {
-        if (isCameraMode) return;
+        if (isCameraMode || isAudioMode) return;
 
         if (!isScattered) { 
             let targetX = mouseX;
@@ -143,6 +150,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         drawLines();
         requestAnimationFrame(animateDots);
+    }
+
+    function animateAudio() {
+        if (!isAudioMode) return;
+
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(dataArray);
+
+        const bass = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
+        const mid = dataArray.slice(10, 40).reduce((a, b) => a + b, 0) / 30;
+        const treble = dataArray.slice(40, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 40);
+
+        const avg = (bass + mid + treble) / 3;
+
+        dots.forEach((dot, index) => {
+            const size = currentDotSize + (avg / 255) * 50;
+            dot.style.width = `${size}px`;
+            dot.style.height = `${size}px`;
+
+            const r = Math.floor(bass);
+            const g = Math.floor(mid);
+            const b = Math.floor(treble);
+            dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        });
+
+        requestAnimationFrame(animateAudio);
     }
 
     async function setupCamera() {
@@ -403,38 +438,83 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         });
     }
 
-    imageToggleButton.addEventListener('click', async () => {
+    imageToggleButton.addEventListener('click', () => {
+        isCameraMode = false;
+        isAudioMode = false;
+
+        if (webcamFeed.srcObject) {
+            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+        }
+        cancelAnimationFrame(handAnimationRequest);
+        webcamFeed.style.display = 'none';
+        handCanvas.style.display = 'none';
+
+        if (audioSource) {
+            audioSource.disconnect();
+            audioSource = null;
+        }
+
+        changeBackground(backgroundImages[currentBgIndex]);
+        mainContent.addEventListener('mousemove', mouseMoveHandler);
+        mainContent.addEventListener('dblclick', dblClickHandler);
+        if (slideshowToggle.checked) {
+            startSlideshow();
+        }
+        currentFollowSpeed = parseFloat(followSpeedInput.value);
+        animateDots();
+    });
+
+    cameraToggleButton.addEventListener('click', async () => {
         if (!model) {
             alert('Handpose model not loaded yet. Please wait.');
             return;
         }
-        isCameraMode = !isCameraMode;
-        if (isCameraMode) {
-            webcamFeed.style.display = 'block';
-            handCanvas.style.display = 'block';
-            document.getElementById('container').style.backgroundImage = 'none';
-            mainContent.removeEventListener('mousemove', mouseMoveHandler);
-            mainContent.removeEventListener('dblclick', dblClickHandler);
-            stopSlideshow();
-            resetConnectMode(false);
-            currentFollowSpeed = 0.5;
-            await setupCamera();
-            animateHand();
+        isCameraMode = true;
+        isAudioMode = false;
+
+        if (audioSource) {
+            audioSource.disconnect();
+            audioSource = null;
+        }
+
+        webcamFeed.style.display = 'block';
+        handCanvas.style.display = 'block';
+        document.getElementById('container').style.backgroundImage = 'none';
+        mainContent.removeEventListener('mousemove', mouseMoveHandler);
+        mainContent.removeEventListener('dblclick', dblClickHandler);
+        stopSlideshow();
+        resetConnectMode(false);
+        currentFollowSpeed = 0.5;
+        await setupCamera();
+        animateHand();
+    });
+
+    audioToggleButton.addEventListener('click', () => {
+        isCameraMode = false;
+        isAudioMode = true;
+
+        if (webcamFeed.srcObject) {
+            webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+        }
+        cancelAnimationFrame(handAnimationRequest);
+        webcamFeed.style.display = 'none';
+        handCanvas.style.display = 'none';
+        document.getElementById('container').style.backgroundImage = 'none';
+
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    audioSource = audioContext.createMediaStreamSource(stream);
+                    audioSource.connect(analyser);
+                    animateAudio();
+                })
+                .catch(err => {
+                    console.error('Error getting audio', err);
+                });
         } else {
-            webcamFeed.style.display = 'none';
-            handCanvas.style.display = 'none';
-            changeBackground(backgroundImages[currentBgIndex]);
-            mainContent.addEventListener('mousemove', mouseMoveHandler);
-            mainContent.addEventListener('dblclick', dblClickHandler);
-            if (slideshowToggle.checked) {
-                startSlideshow();
-            }
-            cancelAnimationFrame(handAnimationRequest);
-            if (webcamFeed.srcObject) {
-                webcamFeed.srcObject.getTracks().forEach(track => track.stop());
-            }
-            currentFollowSpeed = parseFloat(followSpeedInput.value);
-            animateDots();
+            animateAudio();
         }
     });
 
@@ -544,6 +624,8 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
     handpose.load().then(loadedModel => {
         model = loadedModel;
         imageToggleButton.disabled = false;
+        audioToggleButton.disabled = false;
+        cameraToggleButton.disabled = false;
     });
 
 
