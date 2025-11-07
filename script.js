@@ -137,6 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
 
+            let dominantFrequency = 0;
+            let maxAmplitude = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                if (dataArray[i] > maxAmplitude) {
+                    maxAmplitude = dataArray[i];
+                    dominantFrequency = i;
+                }
+            }
+
             const bass = dataArray.slice(0, 32).reduce((a, b) => a + b, 0) / 32;
             const mid = dataArray.slice(32, 128).reduce((a, b) => a + b, 0) / 96;
             const treble = dataArray.slice(128, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 128);
@@ -157,12 +166,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
-                const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
-                const jiggleY = (Math.random() - 0.5) * (treble / 255) * 10;
-                const currentX = parseFloat(dot.style.left);
+                const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
                 const currentY = parseFloat(dot.style.top);
+                const dy = targetY - currentY;
+                const speed = (maxAmplitude / 255) * 0.5;
+                dot.style.top = `${currentY + dy * speed}px`;
+
+                const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
+                const currentX = parseFloat(dot.style.left);
                 dot.style.left = `${currentX + jiggleX}px`;
-                dot.style.top = `${currentY + jiggleY}px`;
             });
         }
 
