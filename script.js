@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let mouseX = 0;
     let mouseY = 0;
     let lastHandX = 0;
-    let lastHandY = 0;
     
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 25; 
@@ -26,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLineThickness = 1.5;
     let currentLineColor = '#ffffff';
     let currentFollowSpeed = parseFloat(followSpeedInput.value);
-    let smoothing = 0.7;
 
     let isCameraMode = false;
     let model = null;
@@ -130,31 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-        handAnimationRequest = requestAnimationFrame(animateHand);
-    }
-
-    function isOpenHand(keypoints) {
-        const thumbTip = keypoints[4];
-        const indexTip = keypoints[8];
-        const middleTip = keypoints[12];
-        const ringTip = keypoints[16];
-        const pinkyTip = keypoints[20];
-        const palmBase = keypoints[0];
-
-        const dist = (p1, p2) => Math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2);
-
-        const thumbDist = dist(palmBase, thumbTip);
-        const indexDist = dist(palmBase, indexTip);
-        const middleDist = dist(palmBase, middleTip);
-        const ringDist = dist(palmBase, ringTip);
-        const pinkyDist = dist(palmBase, pinkyTip);
-
-        const averageDistance = (thumbDist + indexDist + middleDist + ringDist + pinkyDist) / 5;
-        const confidence = Math.min(1, Math.max(0, (averageDistance - 80) / 70));
-
-        return confidence;
-    }
-
     async function animateHand() {
         if (!isCameraMode || !model) return;
 
@@ -188,43 +161,49 @@ document.addEventListener('DOMContentLoaded', () => {
         if (predictions.length > 0) {
             const keypoints = predictions[0].landmarks;
             const palmBase = keypoints[0];
-            const openConfidence = isOpenHand(keypoints);
+            const currentHandX = palmBase[0];
 
-            if (openConfidence > 0.5) {
+            if (isOpenHand(keypoints)) {
                 if (!isScattered) {
                     isScattered = true;
+                    const fullWidth = window.innerWidth;
+                    const fullHeight = window.innerHeight;
+
                     dots.forEach(dot => {
-                        dot.scatterTarget = {
-                            x: Math.random() * window.innerWidth,
-                            y: Math.random() * window.innerHeight
-                        };
+                        dot.style.transition = scatterTransition;
+                        const randomX = Math.random() * fullWidth;
+                        const randomY = Math.random() * fullHeight;
+                        dot.style.left = `${randomX - currentDotSize / 2}px`;
+                        dot.style.top = `${randomY - currentDotSize / 2}px`;
+                        dot.style.transform = 'translateZ(0)';
+                    });
+
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
+                } else {
+                    const handDeltaX = lastHandX ? currentHandX - lastHandX : 0;
+                    dots.forEach(dot => {
+                        const currentX = parseFloat(dot.style.left);
+                        dot.style.left = `${currentX - handDeltaX}px`;
                     });
                 }
-
-                dots.forEach(dot => {
-                    const scatterX = dot.scatterTarget.x;
-                    const scatterY = dot.scatterTarget.y;
-                    const currentX = parseFloat(dot.style.left);
-                    const currentY = parseFloat(dot.style.top);
-
-                    const dx = scatterX - currentX;
-                    const dy = scatterY - currentY;
-
-                    dot.style.left = `${currentX + dx * (1 - smoothing)}px`;
-                    dot.style.top = `${currentY + dy * (1 - smoothing)}px`;
-                });
-
             } else {
                 if (isScattered) {
                     isScattered = false;
+                    dots.forEach(dot => {
+                        dot.style.transition = scatterTransition;
+                    });
+                    setTimeout(() => {
+                        dots.forEach(dot => {
+                            dot.style.transition = 'none';
+                        });
+                    }, 500);
                 }
                 let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
                 let targetY = keypoints[8][1] * 3;
-
-                if (lastHandX !== 0) {
-                    targetX = lastHandX * smoothing + targetX * (1 - smoothing);
-                    targetY = lastHandY * smoothing + targetY * (1 - smoothing);
-                }
 
                 dots.forEach((dot, index) => {
                     const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
@@ -239,11 +218,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetX = parseFloat(dot.style.left) + currentDotSize / 2;
                     targetY = parseFloat(dot.style.top) + currentDotSize / 2;
                 });
-                lastHandX = targetX;
-                lastHandY = targetY;
             }
+            lastHandX = currentHandX;
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
+    }
+
+    function isOpenHand(keypoints) {
+        const thumbTip = keypoints[4];
+        const indexTip = keypoints[8];
+        const middleTip = keypoints[12];
+        const ringTip = keypoints[16];
+        const pinkyTip = keypoints[20];
+        const palmBase = keypoints[0];
+
+        const dist = (p1, p2) => Math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2);
+
+        const thumbDist = dist(palmBase, thumbTip);
+        const indexDist = dist(palmBase, indexTip);
+        const middleDist = dist(palmBase, middleTip);
+        const ringDist = dist(palmBase, ringTip);
+        const pinkyDist = dist(palmBase, pinkyTip);
+
+        const openThreshold = 100;
+
+        return (
+            thumbDist > openThreshold &&
+            indexDist > openThreshold &&
+            middleDist > openThreshold &&
+            ringDist > openThreshold &&
+            pinkyDist > openThreshold
+        );
     }
 
     const mouseMoveHandler = (e) => {
@@ -320,12 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!dotConnections[dotId1]) {
                     dotConnections[dotId1] = [];
                 }
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('stroke', currentLineColor);
-                line.setAttribute('stroke-width', currentLineThickness);
-                line.setAttribute('stroke-dasharray', '5, 5');
-                svg.appendChild(line);
-                dotConnections[dotId1].push({ dotIndex: dotId2, line: line });
+                dotConnections[dotId1].push(dotId2);
 
 activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
                 activeConnection = clickedDot;
@@ -341,10 +341,12 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
     }
 
     function drawConnectionLines() {
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
         Object.keys(dotConnections).forEach(dotId1 => {
-            dotConnections[dotId1].forEach(connection => {
-                const dotId2 = connection.dotIndex;
-                const line = connection.line;
+            dotConnections[dotId1].forEach(dotId2 => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 const x1 = parseFloat(dots[dotId1].style.left) + currentDotSize / 2;
                 const y1 = parseFloat(dots[dotId1].style.top) + currentDotSize / 2;
                 const x2 = parseFloat(dots[dotId2].style.left) + currentDotSize / 2;
@@ -354,6 +356,10 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
                 line.setAttribute('y1', y1);
                 line.setAttribute('x2', x2);
                 line.setAttribute('y2', y2);
+                line.setAttribute('stroke', currentLineColor);
+                line.setAttribute('stroke-width', currentLineThickness);
+                line.setAttribute('stroke-dasharray', '5, 5');
+                svg.appendChild(line);
             });
         });
     }
@@ -362,11 +368,6 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         isScattered = false;
         isConnectMode = false;
         activeConnection = null;
-        Object.keys(dotConnections).forEach(dotId1 => {
-            dotConnections[dotId1].forEach(connection => {
-                svg.removeChild(connection.line);
-            });
-        });
         dotConnections = {};
         
         while (svg.firstChild) {
