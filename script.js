@@ -137,15 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
 
-            let dominantFrequency = 0;
-            let maxAmplitude = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                if (dataArray[i] > maxAmplitude) {
-                    maxAmplitude = dataArray[i];
-                    dominantFrequency = i;
-                }
-            }
-
             const bass = dataArray.slice(0, 32).reduce((a, b) => a + b, 0) / 32;
             const mid = dataArray.slice(32, 128).reduce((a, b) => a + b, 0) / 96;
             const treble = dataArray.slice(128, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 128);
@@ -207,10 +198,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }, 500);
                 } else {
-                    const handDeltaX = lastHandX ? currentHandX - lastHandX : 0;
+                    const dominantFrequency = getDominantFrequency(dataArray);
+                    const maxAmplitude = Math.max(...dataArray);
+
                     dots.forEach(dot => {
-                        const currentX = parseFloat(dot.style.left);
-                        dot.style.left = `${currentX - handDeltaX}px`;
+                        const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
+                        const currentY = parseFloat(dot.style.top);
+                        const dy = targetY - currentY;
+                        const speed = (maxAmplitude / 255) * 0.5;
+                        dot.style.top = `${currentY + dy * speed}px`;
                     });
                 }
             } else {
@@ -245,6 +241,18 @@ document.addEventListener('DOMContentLoaded', () => {
             lastHandX = currentHandX;
         }
         handAnimationRequest = requestAnimationFrame(animateHand);
+    }
+
+    function getDominantFrequency(dataArray) {
+        let dominantFrequency = 0;
+        let maxAmplitude = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+            if (dataArray[i] > maxAmplitude) {
+                maxAmplitude = dataArray[i];
+                dominantFrequency = i;
+            }
+        }
+        return dominantFrequency;
     }
 
     function isOpenHand(keypoints) {
