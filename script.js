@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let analyser = null;
     let audioSource = null;
     const scatterTransition = 'left 0.5s ease, top 0.5s ease';
+    let dominantFrequency = 0;
+    let maxAmplitude = 0;
 
     interactiveModeButton.addEventListener('click', async () => {
         if (!model) {
@@ -137,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
 
+            dominantFrequency = getDominantFrequency(dataArray);
+            maxAmplitude = Math.max(...dataArray);
+
             const bass = dataArray.slice(0, 32).reduce((a, b) => a + b, 0) / 32;
             const mid = dataArray.slice(32, 128).reduce((a, b) => a + b, 0) / 96;
             const treble = dataArray.slice(128, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 128);
@@ -157,11 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
-                const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
-                const currentY = parseFloat(dot.style.top);
-                const dy = targetY - currentY;
-                const speed = (maxAmplitude / 255) * 0.5;
-                dot.style.top = `${currentY + dy * speed}px`;
+                if (isScattered) {
+                    const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
+                    const currentY = parseFloat(dot.style.top);
+                    const dy = targetY - currentY;
+                    const speed = (maxAmplitude / 255) * 0.5;
+                    dot.style.top = `${currentY + dy * speed}px`;
+                }
 
                 const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
                 const currentX = parseFloat(dot.style.left);
@@ -197,17 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             dot.style.transition = 'none';
                         });
                     }, 500);
-                } else {
-                    const dominantFrequency = getDominantFrequency(dataArray);
-                    const maxAmplitude = Math.max(...dataArray);
-
-                    dots.forEach(dot => {
-                        const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
-                        const currentY = parseFloat(dot.style.top);
-                        const dy = targetY - currentY;
-                        const speed = (maxAmplitude / 255) * 0.5;
-                        dot.style.top = `${currentY + dy * speed}px`;
-                    });
                 }
             } else {
                 if (isScattered) {
