@@ -132,26 +132,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isCameraMode || !model) return;
 
         if (analyser) {
-            analyser.fftSize = 256;
+            analyser.fftSize = 1024;
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
 
-            const bass = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
-            const mid = dataArray.slice(10, 40).reduce((a, b) => a + b, 0) / 30;
-            const treble = dataArray.slice(40, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 40);
-
-            const avg = (bass + mid + treble) / 3;
+            const bass = dataArray.slice(0, 32).reduce((a, b) => a + b, 0) / 32;
+            const mid = dataArray.slice(32, 128).reduce((a, b) => a + b, 0) / 96;
+            const treble = dataArray.slice(128, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 128);
 
             dots.forEach((dot, index) => {
-                const size = currentDotSize + (avg / 255) * 50;
+                const size = currentDotSize + (bass / 255) * 50;
                 dot.style.width = `${size}px`;
                 dot.style.height = `${size}px`;
 
-                const r = Math.floor(bass);
-                const g = Math.floor(mid);
-                const b = Math.floor(treble);
+                const r = Math.floor(mid);
+                const g = Math.floor(treble);
+                const b = Math.floor(bass);
                 dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+                const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
+                const jiggleY = (Math.random() - 0.5) * (treble / 255) * 10;
+                const currentX = parseFloat(dot.style.left);
+                const currentY = parseFloat(dot.style.top);
+                dot.style.left = `${currentX + jiggleX}px`;
+                dot.style.top = `${currentY + jiggleY}px`;
             });
         }
 
