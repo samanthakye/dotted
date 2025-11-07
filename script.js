@@ -163,11 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
                 if (isScattered) {
-                    const targetY = (dominantFrequency / bufferLength) * window.innerHeight;
+                    const jiggleY = (Math.random() - 0.5) * (treble / 255) * 20;
                     const currentY = parseFloat(dot.style.top);
-                    const dy = targetY - currentY;
-                    const speed = (maxAmplitude / 255) * 0.5;
-                    dot.style.top = `${currentY + dy * speed}px`;
+                    dot.style.top = `${currentY + jiggleY}px`;
                 }
 
                 const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
