@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastHandX = 0;
     
     let currentDotSize = parseInt(dotSizeInput.value);
-    let currentNumDots = parseInt(numDotsInput.value) || 25; 
+    let currentNumDots = parseInt(numDotsInput.value) || 50; 
     let currentDotColor = '#ffffff';
     let currentLineThickness = 1.5;
     let currentLineColor = '#ffffff';
