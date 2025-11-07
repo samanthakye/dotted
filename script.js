@@ -141,15 +141,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const mid = dataArray.slice(32, 128).reduce((a, b) => a + b, 0) / 96;
             const treble = dataArray.slice(128, bufferLength).reduce((a, b) => a + b, 0) / (bufferLength - 128);
 
+            const total = bass + mid + treble;
+            const bassRatio = bass / total;
+            const midRatio = mid / total;
+            const trebleRatio = treble / total;
+
             dots.forEach((dot, index) => {
                 const size = currentDotSize + (bass / 255) * 50;
                 dot.style.width = `${size}px`;
                 dot.style.height = `${size}px`;
 
-                const r = Math.floor(mid);
-                const g = Math.floor(treble);
-                const b = Math.floor(bass);
-                dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                const hue = (midRatio * 360 + 180) % 360;
+                const saturation = (trebleRatio * 100);
+                const lightness = (bassRatio * 50 + 25);
+
+                dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
                 const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
                 const jiggleY = (Math.random() - 0.5) * (treble / 255) * 10;
