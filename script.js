@@ -56,6 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (audioSource) {
             audioSource.disconnect();
+            // If the audioSource was connected to destination, it will be disconnected here.
+            // When switching to webcam, a new audioSource will be created and connected to analyser.
+            // The webcam audio stream will be connected to analyser, but not directly to destination,
+            // as the audio reactivity is handled by the analyser.
         }
         uploadedVideo.style.display = 'none';
 
@@ -74,6 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resetConnectMode(false);
         currentFollowSpeed = 0.5;
         await setupInteractiveMode();
+        // Ensure webcam audio is connected to destination
+        if (audioSource) {
+            audioSource.connect(audioContext.destination);
+        }
         animateHand();
     });
 
@@ -102,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             audioSource = audioContext.createMediaElementSource(uploadedVideo);
             audioSource.connect(analyser);
+            audioSource.connect(audioContext.destination); // Connect to speakers
             audioContext.resume();
 
             // Switch to video mode
@@ -183,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);
+        audioSource.connect(audioContext.destination); // Connect webcam audio to speakers
 
         return new Promise((resolve) => {
             webcamFeed.onloadedmetadata = () => {
