@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
             URL.revokeObjectURL(uploadedVideo.src);
             uploadedVideo.src = '';
         }
+        if (audioSource) {
+            audioSource.disconnect();
+        }
         uploadedVideo.style.display = 'none';
 
         isCameraMode = true;
@@ -88,6 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoCanvas.width = uploadedVideo.videoWidth;
                 videoCanvas.height = uploadedVideo.videoHeight;
             });
+
+            // Set up audio for video
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+            }
+            if (audioSource) {
+                audioSource.disconnect();
+            }
+            audioSource = audioContext.createMediaElementSource(uploadedVideo);
+            audioSource.connect(analyser);
+            audioContext.resume();
 
             // Switch to video mode
             isCameraMode = false;
@@ -524,6 +539,8 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
         if (!isCameraMode && uploadedVideo.src && !uploadedVideo.paused) {
             videoCtx.drawImage(uploadedVideo, 0, 0, videoCanvas.width, videoCanvas.height);
             const frameData = videoCtx.getImageData(0, 0, videoCanvas.width, videoCanvas.height).data;
+
+            updateDotsWithAudio();
 
             dots.forEach(dot => {
                 const x = Math.floor(parseFloat(dot.style.left) + currentDotSize / 2);
