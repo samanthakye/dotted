@@ -126,33 +126,27 @@ body, html {
     transform: translateZ(0); 
 }
 
-.dot {
-    position: absolute;
-    width: var(--dot-size);
-    height: var(--dot-size);
-    background-color: var(--dot-color);
-    border-radius: 50%;
-    z-index: 1000; 
-}
-
-#dot-connections-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999; 
-}
-
-#webcamFeed {
+#webcamFeed, #uploadedVideo {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover; 
-    transform: scaleX(-1); 
     z-index: 10;
+}
+
+#webcamFeed {
+    transform: scaleX(-1); 
+}
+
+#dotsCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 998;
 }
 
 .circular-button, .snapshot-button {

@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadedVideo = document.getElementById('uploadedVideo');
     const videoCanvas = document.getElementById('videoCanvas');
     const videoCtx = videoCanvas.getContext('2d');
+    const dotsCanvas = document.getElementById('dotsCanvas');
+    const dotsCtx = dotsCanvas.getContext('2d');
+    const startRecordingBtn = document.getElementById('start-recording-btn');
+    const stopRecordingBtn = document.getElementById('stop-recording-btn');
 
     let dots = [];
     let mouseX = 0;
@@ -41,6 +45,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const scatterTransition = 'left 0.5s ease, top 0.5s ease';
     let dominantFrequency = 0;
     let maxAmplitude = 0;
+
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+    let compositeCanvas;
+    let compositeCtx;
+
+    startRecordingBtn.addEventListener('click', () => {
+        isRecording = true;
+        recordedChunks = [];
+
+        compositeCanvas = document.createElement('canvas');
+        compositeCanvas.width = dotsCanvas.width;
+        compositeCanvas.height = dotsCanvas.height;
+        compositeCtx = compositeCanvas.getContext('2d');
+
+        const stream = compositeCanvas.captureStream();
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dotted-recording.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        mediaRecorder.start();
+        startRecordingBtn.style.display = 'none';
+        stopRecordingBtn.style.display = 'block';
+    });
+
+    stopRecordingBtn.addEventListener('click', () => {
+        isRecording = false;
+        mediaRecorder.stop();
+        startRecordingBtn.style.display = 'block';
+        stopRecordingBtn.style.display = 'none';
+    });
 
     interactiveModeButton.addEventListener('click', async () => {
         if (!model) {
@@ -149,32 +199,20 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContent.appendChild(svg);
 
     function createDot() {
-        const dot = document.createElement('div');
-        dot.classList.add('dot');
-        dot.style.width = `${currentDotSize}px`;
-        dot.style.height = `${currentDotSize}px`;
-        dot.style.backgroundColor = currentDotColor;
         const rect = mainContent.getBoundingClientRect();
-        dot.style.left = `${Math.random() * rect.width}px`;
-        dot.style.top = `${Math.random() * rect.height}px`;
-        mainContent.appendChild(dot);
-        dot.addEventListener('click', handleDotClick);
-        return dot;
+        return {
+            x: Math.random() * rect.width,
+            y: Math.random() * rect.height,
+            size: currentDotSize,
+            color: currentDotColor
+        };
     }
 
     function initializeDots(count) {
-        dots.forEach(dot => dot.remove());
         dots = [];
         for (let i = 0; i < count; i++) {
             dots.push(createDot());
         }
-    }
-
-    function updateDotProperties() {
-        dots.forEach(dot => {
-            dot.style.width = `${currentDotSize}px`;
-            dot.style.height = `${currentDotSize}px`;
-        });
     }
 
     function drawLines() {
@@ -230,26 +268,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const trebleRatio = treble / total;
 
             dots.forEach((dot, index) => {
-                const size = currentDotSize + (bass / 255) * 50;
-                dot.style.width = `${size}px`;
-                dot.style.height = `${size}px`;
+                dot.size = currentDotSize + (bass / 255) * 50;
 
                 if (isCameraMode) { // Only change color based on audio in camera mode
                     const hue = (midRatio * 360 + 180) % 360;
                     const saturation = (trebleRatio * 100);
                     const lightness = (bassRatio * 50 + 25);
-                    dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    dot.color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                 }
 
                 if (isScattered) {
                     const jiggleY = (Math.random() - 0.5) * (treble / 255) * 20;
-                    const currentY = parseFloat(dot.style.top);
-                    dot.style.top = `${currentY + jiggleY}px`;
+                    dot.y += jiggleY;
                 }
 
                 const jiggleX = (Math.random() - 0.5) * (treble / 255) * 10;
-                const currentX = parseFloat(dot.style.left);
-                dot.style.left = `${currentX + jiggleX}px`;
+                dot.x += jiggleX;
             });
         }
     }
@@ -274,47 +308,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     const fullHeight = window.innerHeight;
 
                     dots.forEach(dot => {
-                        dot.style.transition = scatterTransition;
-                        const randomX = Math.random() * fullWidth;
-                        const randomY = Math.random() * fullHeight;
-                        dot.style.left = `${randomX - currentDotSize / 2}px`;
-                        dot.style.top = `${randomY - currentDotSize / 2}px`;
-                        dot.style.transform = 'translateZ(0)';
+                        dot.x = Math.random() * fullWidth;
+                        dot.y = Math.random() * fullHeight;
                     });
-
-                    setTimeout(() => {
-                        dots.forEach(dot => {
-                            dot.style.transition = 'none';
-                        });
-                    }, 500);
                 }
             } else {
                 if (isScattered) {
                     isScattered = false;
-                    dots.forEach(dot => {
-                        dot.style.transition = scatterTransition;
-                    });
-                    setTimeout(() => {
-                        dots.forEach(dot => {
-                            dot.style.transition = 'none';
-                        });
-                    }, 500);
                 }
                 let targetX = (webcamFeed.videoWidth - keypoints[8][0]) * 3;
                 let targetY = keypoints[8][1] * 3;
 
                 dots.forEach((dot, index) => {
-                    const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                    const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+                    const dx = targetX - dot.x;
+                    const dy = targetY - dot.y;
 
-                    const dx = targetX - currentX;
-                    const dy = targetY - currentY;
+                    dot.x += dx * currentFollowSpeed;
+                    dot.y += dy * currentFollowSpeed;
 
-                    dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                    dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-
-                    targetX = parseFloat(dot.style.left) + currentDotSize / 2;
-                    targetY = parseFloat(dot.style.top) + currentDotSize / 2;
+                    targetX = dot.x;
+                    targetY = dot.y;
                 });
             }
             lastHandX = currentHandX;
@@ -370,118 +383,25 @@ document.addEventListener('DOMContentLoaded', () => {
     mainContent.addEventListener('mousemove', mouseMoveHandler);
 
     const dblClickHandler = (e) => {
-        if (!isScattered && !isConnectMode) {
+        if (!isScattered) {
             const fullWidth = window.innerWidth;
             const fullHeight = window.innerHeight;
 
             dots.forEach(dot => {
-                dot.style.transition = scatterTransition; 
-
-                const minX = 0; 
-                const maxX = fullWidth; 
-                
-                const randomX = Math.random() * (maxX - minX) + minX; 
-                const randomY = Math.random() * fullHeight;
-
-                dot.style.left = `${randomX - currentDotSize / 2}px`;
-                dot.style.top = `${randomY - currentDotSize / 2}px`;
-
-                dot.style.transform = 'translateZ(0)';
+                dot.x = Math.random() * fullWidth;
+                dot.y = Math.random() * fullHeight;
             });
             
             isScattered = true;
-            isConnectMode = true; 
-            
-            activeConnection = null;
-            dotConnections = {}; 
-            
-            dots.forEach(dot => {
-                if (isCameraMode) { // Only apply shadow in camera mode
-                    dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                }
-                dot.style.cursor = 'pointer'; 
-            });
-
-            setTimeout(() => {
-                dots.forEach(dot => {
-                    dot.style.transition = 'none';
-                });
-            }, 500);
-
-        } else if (isConnectMode) {
-            dots.forEach(dot => {
-                dot.style.transition = scatterTransition;
-            });
-            
-            resetConnectMode(false); 
-
-            setTimeout(() => {
-                dots.forEach(dot => {
-                    dot.style.transition = 'none';
-                });
-            }, 500);
+        } else {
+            isScattered = false;
         }
     };
     mainContent.addEventListener('dblclick', dblClickHandler);
 
-    function handleDotClick(e) {
-        if (!isConnectMode) return;
-
-        const clickedDot = e.target;
-
-        if (activeConnection) {
-            if (activeConnection !== clickedDot) {
-                const dotId1 = dots.indexOf(activeConnection);
-                const dotId2 = dots.indexOf(clickedDot);
-
-                if (!dotConnections[dotId1]) {
-                    dotConnections[dotId1] = [];
-                }
-                dotConnections[dotId1].push(dotId2);
-
-                if (isCameraMode) { // Only apply shadow in camera mode
-                    activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                }
-                activeConnection = clickedDot;
-                if (isCameraMode) { // Only apply shadow in camera mode
-                    activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
-                }
-            } else {
-                if (isCameraMode) { // Only remove shadow in camera mode
-                    activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
-                }
-                activeConnection = null;
-            }
-        } else {
-            activeConnection = clickedDot;
-            if (isCameraMode) { // Only apply shadow in camera mode
-                activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
-            }
-        }
-    }
-
     function drawConnectionLines() {
-        while (svg.firstChild) {
-            svg.removeChild(svg.firstChild);
-        }
-        Object.keys(dotConnections).forEach(dotId1 => {
-            dotConnections[dotId1].forEach(dotId2 => {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                const x1 = parseFloat(dots[dotId1].style.left) + currentDotSize / 2;
-                const y1 = parseFloat(dots[dotId1].style.top) + currentDotSize / 2;
-                const x2 = parseFloat(dots[dotId2].style.left) + currentDotSize / 2;
-                const y2 = parseFloat(dots[dotId2].style.top) + currentDotSize / 2;
-
-                line.setAttribute('x1', x1);
-                line.setAttribute('y1', y1);
-                line.setAttribute('x2', x2);
-                line.setAttribute('y2', y2);
-                line.setAttribute('stroke', currentLineColor);
-                line.setAttribute('stroke-width', currentLineThickness);
-                line.setAttribute('stroke-dasharray', '5, 5');
-                svg.appendChild(line);
-            });
-        });
+        // This function is no longer used but is kept for now to avoid breaking dependencies.
+        // It will be removed in a future refactoring.
     }
 
     function resetConnectMode(shouldAnimate) {
@@ -493,14 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
         while (svg.firstChild) {
             svg.removeChild(svg.firstChild);
         }
-
-        dots.forEach(dot => {
-            dot.style.boxShadow = 'none';
-            dot.style.cursor = 'default';
-            if (shouldAnimate) {
-                dot.style.transition = scatterTransition;
-            }
-        });
     }
 
     fullscreenBtn.addEventListener('click', () => {
@@ -541,23 +453,56 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeDots(currentNumDots);
     });
 
+    startRecordingBtn.addEventListener('click', () => {
+        recordedChunks = [];
+        const stream = dotsCanvas.captureStream();
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dotted-recording.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        mediaRecorder.start();
+        startRecordingBtn.style.display = 'none';
+        stopRecordingBtn.style.display = 'block';
+    });
+
+    stopRecordingBtn.addEventListener('click', () => {
+        mediaRecorder.stop();
+        startRecordingBtn.style.display = 'block';
+        stopRecordingBtn.style.display = 'none';
+    });
+
     function animate() {
+        dotsCanvas.width = mainContent.clientWidth;
+        dotsCanvas.height = mainContent.clientHeight;
+        dotsCtx.clearRect(0, 0, dotsCanvas.width, dotsCanvas.height);
+
         if (!isScattered && !isCameraMode) {
             let targetX = mouseX;
             let targetY = mouseY;
 
             dots.forEach((dot, index) => {
-                const currentX = parseFloat(dot.style.left) + currentDotSize / 2;
-                const currentY = parseFloat(dot.style.top) + currentDotSize / 2;
+                const dx = targetX - dot.x;
+                const dy = targetY - dot.y;
 
-                const dx = targetX - currentX;
-                const dy = targetY - currentY;
+                dot.x += dx * currentFollowSpeed;
+                dot.y += dy * currentFollowSpeed;
 
-                dot.style.left = `${parseFloat(dot.style.left) + dx * currentFollowSpeed}px`;
-                dot.style.top = `${parseFloat(dot.style.top) + dy * currentFollowSpeed}px`;
-
-                targetX = currentX;
-                targetY = currentY;
+                targetX = dot.x;
+                targetY = dot.y;
             });
         }
 
@@ -568,17 +513,34 @@ document.addEventListener('DOMContentLoaded', () => {
             updateDotsWithAudio();
 
             dots.forEach(dot => {
-                const x = Math.floor(parseFloat(dot.style.left) + currentDotSize / 2);
-                const y = Math.floor(parseFloat(dot.style.top) + currentDotSize / 2);
+                const x = Math.floor(dot.x);
+                const y = Math.floor(dot.y);
 
                 if (x >= 0 && x < videoCanvas.width && y >= 0 && y < videoCanvas.height) {
                     const index = (y * videoCanvas.width + x) * 4;
                     const r = frameData[index];
                     const g = frameData[index + 1];
                     const b = frameData[index + 2];
-                    dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    dot.color = `rgb(${r}, ${g}, ${b})`;
                 }
             });
+        }
+
+        dots.forEach(dot => {
+            dotsCtx.beginPath();
+            dotsCtx.arc(dot.x, dot.y, dot.size / 2, 0, Math.PI * 2);
+            dotsCtx.fillStyle = dot.color;
+            dotsCtx.fill();
+        });
+
+        if (isRecording) {
+            compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+            if (isCameraMode) {
+                compositeCtx.drawImage(webcamFeed, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            } else {
+                compositeCtx.drawImage(uploadedVideo, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            }
+            compositeCtx.drawImage(dotsCanvas, 0, 0);
         }
 
         drawLines();
