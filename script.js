@@ -180,9 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function animateHand() {
-        if (!isCameraMode || !model) return;
-
+    function updateDotsWithAudio() {
         if (analyser) {
             analyser.fftSize = 1024;
             const bufferLength = analyser.frequencyBinCount;
@@ -206,11 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.width = `${size}px`;
                 dot.style.height = `${size}px`;
 
-                const hue = (midRatio * 360 + 180) % 360;
-                const saturation = (trebleRatio * 100);
-                const lightness = (bassRatio * 50 + 25);
-
-                dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                if (isCameraMode) { // Only change color based on audio in camera mode
+                    const hue = (midRatio * 360 + 180) % 360;
+                    const saturation = (trebleRatio * 100);
+                    const lightness = (bassRatio * 50 + 25);
+                    dot.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                }
 
                 if (isScattered) {
                     const jiggleY = (Math.random() - 0.5) * (treble / 255) * 20;
@@ -223,6 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.left = `${currentX + jiggleX}px`;
             });
         }
+    }
+
+    async function animateHand() {
+        if (!isCameraMode || !model) return;
+
+        updateDotsWithAudio();
 
         const predictions = await model.estimateHands(webcamFeed);
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
