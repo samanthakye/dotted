@@ -391,7 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dotConnections = {}; 
             
             dots.forEach(dot => {
-                dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                if (isCameraMode) { // Only apply shadow in camera mode
+                    dot.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                }
                 dot.style.cursor = 'pointer'; 
             });
 
@@ -432,16 +434,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 dotConnections[dotId1].push(dotId2);
 
-activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                if (isCameraMode) { // Only apply shadow in camera mode
+                    activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                }
                 activeConnection = clickedDot;
-activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
+                if (isCameraMode) { // Only apply shadow in camera mode
+                    activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
+                }
             } else {
-                activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                if (isCameraMode) { // Only remove shadow in camera mode
+                    activeConnection.style.boxShadow = `0 0 10px 5px ${currentDotColor}`;
+                }
                 activeConnection = null;
             }
         } else {
             activeConnection = clickedDot;
-            activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
+            if (isCameraMode) { // Only apply shadow in camera mode
+                activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
+            }
         }
     }
 
