@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const sidebarArrowBtn = document.getElementById('sidebar-arrow-btn');
     const followSpeedInput = document.getElementById('followSpeed');
+    const videoUpload = document.getElementById('video-upload');
+    const uploadVideoBtn = document.getElementById('upload-video-btn');
+    const uploadedVideo = document.getElementById('uploadedVideo');
 
     let dots = [];
     let mouseX = 0;
@@ -42,6 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Handpose model not loaded yet. Please wait.');
             return;
         }
+
+        // Clean up video mode
+        if (uploadedVideo.src) {
+            uploadedVideo.pause();
+            URL.revokeObjectURL(uploadedVideo.src);
+            uploadedVideo.src = '';
+        }
+        uploadedVideo.style.display = 'none';
+
         isCameraMode = true;
 
         if (!audioContext) {
@@ -58,6 +70,37 @@ document.addEventListener('DOMContentLoaded', () => {
         currentFollowSpeed = 0.5;
         await setupInteractiveMode();
         animateHand();
+    });
+
+    uploadVideoBtn.addEventListener('click', () => {
+        videoUpload.click();
+    });
+
+    videoUpload.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const videoURL = URL.createObjectURL(file);
+            uploadedVideo.src = videoURL;
+
+            // Switch to video mode
+            isCameraMode = false;
+            if (handAnimationRequest) {
+                cancelAnimationFrame(handAnimationRequest);
+                handAnimationRequest = null;
+            }
+            webcamFeed.style.display = 'none';
+            handCanvas.style.display = 'none';
+            uploadedVideo.style.display = 'block';
+
+            // Stop webcam stream
+            if (webcamFeed.srcObject) {
+                webcamFeed.srcObject.getTracks().forEach(track => track.stop());
+                webcamFeed.srcObject = null;
+            }
+
+            mainContent.addEventListener('mousemove', mouseMoveHandler);
+            mainContent.addEventListener('dblclick', dblClickHandler);
+        }
     });
 
     let isScattered = false;
