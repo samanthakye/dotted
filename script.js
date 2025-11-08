@@ -123,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
             handCanvas.style.display = 'none';
             uploadedVideo.style.display = 'block';
 
+            // Explicitly remove shadows from dots when switching to video mode
+            dots.forEach(dot => {
+                dot.style.boxShadow = 'none';
+            });
+
             // Stop webcam stream
             if (webcamFeed.srcObject) {
                 webcamFeed.srcObject.getTracks().forEach(track => track.stop());
