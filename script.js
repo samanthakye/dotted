@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoUpload = document.getElementById('video-upload');
     const uploadVideoBtn = document.getElementById('upload-video-btn');
     const uploadedVideo = document.getElementById('uploadedVideo');
+    const videoCanvas = document.getElementById('videoCanvas');
+    const videoCtx = videoCanvas.getContext('2d');
 
     let dots = [];
     let mouseX = 0;
@@ -81,6 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (file) {
             const videoURL = URL.createObjectURL(file);
             uploadedVideo.src = videoURL;
+
+            uploadedVideo.addEventListener('loadedmetadata', () => {
+                videoCanvas.width = uploadedVideo.videoWidth;
+                videoCanvas.height = uploadedVideo.videoHeight;
+            });
 
             // Switch to video mode
             isCameraMode = false;
@@ -508,6 +515,25 @@ activeConnection.style.boxShadow = `0 0 20px 10px ${currentDotColor}`;
                 targetY = currentY;
             });
         }
+
+        if (!isCameraMode && uploadedVideo.src && !uploadedVideo.paused) {
+            videoCtx.drawImage(uploadedVideo, 0, 0, videoCanvas.width, videoCanvas.height);
+            const frameData = videoCtx.getImageData(0, 0, videoCanvas.width, videoCanvas.height).data;
+
+            dots.forEach(dot => {
+                const x = Math.floor(parseFloat(dot.style.left) + currentDotSize / 2);
+                const y = Math.floor(parseFloat(dot.style.top) + currentDotSize / 2);
+
+                if (x >= 0 && x < videoCanvas.width && y >= 0 && y < videoCanvas.height) {
+                    const index = (y * videoCanvas.width + x) * 4;
+                    const r = frameData[index];
+                    const g = frameData[index + 1];
+                    const b = frameData[index + 2];
+                    dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                }
+            });
+        }
+
         drawLines();
         requestAnimationFrame(animate);
     }
