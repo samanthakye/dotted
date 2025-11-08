@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dotsCtx = dotsCanvas.getContext('2d');
     const startRecordingBtn = document.getElementById('start-recording-btn');
     const stopRecordingBtn = document.getElementById('stop-recording-btn');
+    const compositeCanvas = document.getElementById('compositeCanvas');
+    const compositeCtx = compositeCanvas.getContext('2d');
 
     let dots = [];
     let mouseX = 0;
@@ -454,9 +456,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     startRecordingBtn.addEventListener('click', () => {
+        isRecording = true;
         recordedChunks = [];
-        const stream = dotsCanvas.captureStream();
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+        const videoStream = compositeCanvas.captureStream();
+        const audioStream = isCameraMode ? webcamFeed.srcObject : uploadedVideo.captureStream();
+        const audioTrack = audioStream.getAudioTracks()[0];
+        
+        const combinedStream = new MediaStream([...videoStream.getVideoTracks(), audioTrack]);
+
+        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp9' });
 
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -480,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     stopRecordingBtn.addEventListener('click', () => {
+        isRecording = false;
         mediaRecorder.stop();
         startRecordingBtn.style.display = 'block';
         stopRecordingBtn.style.display = 'none';
@@ -533,15 +543,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dotsCtx.fill();
         });
 
-        if (isRecording) {
-            compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-            if (isCameraMode) {
-                compositeCtx.drawImage(webcamFeed, 0, 0, compositeCanvas.width, compositeCanvas.height);
-            } else {
-                compositeCtx.drawImage(uploadedVideo, 0, 0, compositeCanvas.width, compositeCanvas.height);
-            }
-            compositeCtx.drawImage(dotsCanvas, 0, 0);
+        compositeCanvas.width = dotsCanvas.width;
+        compositeCanvas.height = dotsCanvas.height;
+        compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+        if (isCameraMode) {
+            compositeCtx.drawImage(webcamFeed, 0, 0, compositeCanvas.width, compositeCanvas.height);
+        } else {
+            compositeCtx.drawImage(uploadedVideo, 0, 0, compositeCanvas.width, compositeCanvas.height);
         }
+        compositeCtx.drawImage(dotsCanvas, 0, 0);
 
         drawLines();
         requestAnimationFrame(animate);
