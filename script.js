@@ -280,13 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const lightness = (bassRatio * 50 + 25);
                     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                     dot.color = color;
-
-                    if (colorHistory.length < 100) {
-                        colorHistory.push(color);
-                    } else {
-                        colorHistory.shift();
-                        colorHistory.push(color);
-                    }
                 }
 
                 if (isScattered) {
@@ -429,15 +422,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateColorGrid() {
-        if (!isColorGridVisible) return;
+        if (!isColorGridVisible || !analyser) return;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(dataArray);
 
         colorGrid.innerHTML = '';
-        colorHistory.forEach(color => {
+        const gridSize = 100; // 10x10 grid
+        const step = Math.floor(bufferLength / gridSize);
+
+        for (let i = 0; i < gridSize; i++) {
+            const value = dataArray[i * step];
+            const lightness = (value / 255) * 100;
+            const color = `hsl(0, 0%, ${lightness}%)`;
+
             const colorSquare = document.createElement('div');
             colorSquare.className = 'color-square';
             colorSquare.style.backgroundColor = color;
             colorGrid.appendChild(colorSquare);
-        });
+        }
     }
 
     toggleColorGridBtn.addEventListener('click', () => {
