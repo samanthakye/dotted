@@ -51,8 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaRecorder;
     let recordedChunks = [];
     let isRecording = false;
-    let compositeCanvas;
-    let compositeCtx;
 
     startRecordingBtn.addEventListener('click', () => {
         isRecording = true;
@@ -552,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
             compositeCtx.drawImage(uploadedVideo, 0, 0, compositeCanvas.width, compositeCanvas.height);
         }
         compositeCtx.drawImage(dotsCanvas, 0, 0);
+        console.log('Drawing to compositeCanvas');
 
         drawLines();
         requestAnimationFrame(animate);
