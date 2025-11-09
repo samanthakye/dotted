@@ -537,7 +537,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const r = frameData[index];
                     const g = frameData[index + 1];
                     const b = frameData[index + 2];
-                    dot.color = `rgb(${r}, ${g}, ${b})`;
+                    
+                    // Apply white tint
+                    const tintedR = Math.min(255, Math.floor((r + 255) / 2));
+                    const tintedG = Math.min(255, Math.floor((g + 255) / 2));
+                    const tintedB = Math.min(255, Math.floor((b + 255) / 2));
+
+                    dot.color = `rgb(${tintedR}, ${tintedG}, ${tintedB})`;
                 }
             });
         }
