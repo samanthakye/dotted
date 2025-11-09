@@ -24,11 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopRecordingBtn = document.getElementById('stop-recording-btn');
     const compositeCanvas = document.getElementById('compositeCanvas');
     const compositeCtx = compositeCanvas.getContext('2d');
+    const toggleColorGridBtn = document.getElementById('toggle-color-grid-btn');
+    const colorGrid = document.getElementById('color-grid');
 
     let dots = [];
     let mouseX = 0;
     let mouseY = 0;
     let lastHandX = 0;
+    let colorHistory = [];
+    let isColorGridVisible = false;
     
     let currentDotSize = parseInt(dotSizeInput.value);
     let currentNumDots = parseInt(numDotsInput.value) || 50; 
@@ -274,7 +278,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const hue = (midRatio * 360 + 180) % 360;
                     const saturation = (trebleRatio * 100);
                     const lightness = (bassRatio * 50 + 25);
-                    dot.color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    dot.color = color;
+
+                    if (colorHistory.length < 100) {
+                        colorHistory.push(color);
+                    } else {
+                        colorHistory.shift();
+                        colorHistory.push(color);
+                    }
                 }
 
                 if (isScattered) {
@@ -292,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isCameraMode || !model) return;
 
         updateDotsWithAudio();
+        updateColorGrid();
 
         const predictions = await model.estimateHands(webcamFeed);
         handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
@@ -414,6 +427,23 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.removeChild(svg.firstChild);
         }
     }
+
+    function updateColorGrid() {
+        if (!isColorGridVisible) return;
+
+        colorGrid.innerHTML = '';
+        colorHistory.forEach(color => {
+            const colorSquare = document.createElement('div');
+            colorSquare.className = 'color-square';
+            colorSquare.style.backgroundColor = color;
+            colorGrid.appendChild(colorSquare);
+        });
+    }
+
+    toggleColorGridBtn.addEventListener('click', () => {
+        isColorGridVisible = !isColorGridVisible;
+        colorGrid.style.display = isColorGridVisible ? 'flex' : 'none';
+    });
 
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
@@ -543,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tintedG = Math.min(255, Math.floor((g + 255) / 2));
                     const tintedB = Math.min(255, Math.floor((b + 255) / 2));
 
-                    dot.color = `rgb(${tintedR}, ${tintedG}, ${tintedB})`;
+                    dot.color = `rgba(${tintedR}, ${tintedG}, ${tintedB}, 0.7)`;
                 }
             });
         }

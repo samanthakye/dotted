@@ -48,6 +48,9 @@
                     <button id="start-recording-btn" class="snapshot-button">🔴 Start Recording</button>
                     <button id="stop-recording-btn" class="snapshot-button" style="display: none;">⏹️ Stop Recording</button>
                 </div>
+                <div class="setting-group">
+                    <button id="toggle-color-grid-btn" class="snapshot-button">🎨 Toggle Color Grid</button>
+                </div>
             </aside>
 
             <main id="main-content">
@@ -57,6 +60,7 @@
                 <canvas id="videoCanvas" style="display: none;"></canvas>
                 <canvas id="dotsCanvas"></canvas>
                 <canvas id="compositeCanvas" style="display: none;"></canvas>
+                <div id="color-grid" style="display: none;"></div>
             </main>
         </div>
         <button id="sidebar-arrow-btn">&larr;</button>
