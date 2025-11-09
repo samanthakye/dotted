@@ -463,7 +463,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const combinedStream = new MediaStream([...videoStream.getVideoTracks(), audioTrack]);
 
-        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp9' });
+        const options = { mimeType: 'video/webm; codecs=vp9' };
+        if (MediaRecorder.isTypeSupported('video/mp4; codecs=avc1.42E01E')) {
+            options.mimeType = 'video/mp4; codecs=avc1.42E01E';
+            console.log('Recording in MP4 format.');
+        } else {
+            console.log('MP4 not supported, recording in WebM format.');
+        }
+
+        mediaRecorder = new MediaRecorder(combinedStream, options);
 
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -472,11 +480,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const blob = new Blob(recordedChunks, { type: options.mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'dotted-recording.webm';
+            a.download = options.mimeType.includes('mp4') ? 'dotted-recording.mp4' : 'dotted-recording.webm';
             a.click();
             URL.revokeObjectURL(url);
         };
@@ -550,7 +558,6 @@ document.addEventListener('DOMContentLoaded', () => {
             compositeCtx.drawImage(uploadedVideo, 0, 0, compositeCanvas.width, compositeCanvas.height);
         }
         compositeCtx.drawImage(dotsCanvas, 0, 0);
-        console.log('Drawing to compositeCanvas');
 
         drawLines();
         requestAnimationFrame(animate);
